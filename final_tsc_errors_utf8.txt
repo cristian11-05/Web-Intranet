@@ -1,0 +1,16 @@
+﻿src/components/JustificationsView.tsx(110,17): error TS2322: Type 'Justification | null' is not assignable to type 'DetailsData | null'.
+  Type 'Justification' is not assignable to type 'DetailsData'.
+    Type 'Justification' is not assignable to type 'Partial<Justification & Suggestion>'.
+      Types of property 'adjuntos' are incompatible.
+        Type 'JustificationAttachment[] | undefined' is not assignable to type '(JustificationAttachment[] & SuggestionAttachment[]) | undefined'.
+          Type 'JustificationAttachment[]' is not assignable to type 'JustificationAttachment[] & SuggestionAttachment[]'.
+            Type 'JustificationAttachment[]' is not assignable to type 'SuggestionAttachment[]'.
+              Type 'JustificationAttachment' is missing the following properties from type 'SuggestionAttachment': suggestion_id, tama├▒o
+src/components/SuggestionsList.tsx(88,17): error TS2322: Type 'Suggestion | null' is not assignable to type 'DetailsData | null'.
+  Type 'Suggestion' is not assignable to type 'DetailsData'.
+    Type 'Suggestion' is not assignable to type 'Partial<Justification & Suggestion>'.
+      Types of property 'adjuntos' are incompatible.
+        Type 'SuggestionAttachment[] | undefined' is not assignable to type '(JustificationAttachment[] & SuggestionAttachment[]) | undefined'.
+          Type 'SuggestionAttachment[]' is not assignable to type 'JustificationAttachment[] & SuggestionAttachment[]'.
+            Type 'SuggestionAttachment[]' is not assignable to type 'JustificationAttachment[]'.
+              Property 'justification_id' is missing in type 'SuggestionAttachment' but required in type 'JustificationAttachment'.

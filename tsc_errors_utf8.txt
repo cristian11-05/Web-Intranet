@@ -1,0 +1,1 @@
+﻿src/components/UserModal.tsx(3,16): error TS6133: 'Area' is declared but its value is never read.
