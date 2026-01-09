@@ -34,6 +34,7 @@ export interface Suggestion {
     titulo: string;
     descripcion: string;
     fecha_creacion: string;
+    area_nombre?: string;
     adjuntos?: SuggestionAttachment[];
 }
 

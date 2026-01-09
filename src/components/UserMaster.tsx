@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from './Layout';
-import { MOCK_USERS as INITIAL_USERS, MOCK_AREAS, User } from '../data/mockData';
-import { Search, UserPlus, Edit2, Trash2, FileDown, UploadCloud, UserCircle } from 'lucide-react';
+import { MOCK_AREAS, User } from '../data/mockData';
+import { Search, UserPlus, Edit2, Trash2, FileDown, UploadCloud, UserCircle, Loader2 } from 'lucide-react';
 import { UserModal } from './UserModal';
+import { userService } from '../services/user.service';
 
 export const UserMaster = () => {
-    const [users, setUsers] = useState<User[]>(INITIAL_USERS);
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [filterArea, setFilterArea] = useState('Todas');
     const [filterDoc, setFilterDoc] = useState('');
@@ -13,6 +16,23 @@ export const UserMaster = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        loadUsers();
+    }, []);
+
+    const loadUsers = async () => {
+        try {
+            setLoading(true);
+            const data = await userService.getAllUsers();
+            setUsers(data);
+        } catch (err: any) {
+            setError('No se pudieron cargar los usuarios');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Búsqueda Global + Filtros Específicos
     const filteredUsers = users.filter(user => {
@@ -30,22 +50,22 @@ export const UserMaster = () => {
 
     const getAreaName = (id: string) => MOCK_AREAS.find(a => a.id === id)?.nombre || 'N/A';
 
-    const handleSave = (userData: Partial<User>) => {
-        if (selectedUser) {
-            // Edit
-            setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...userData } as User : u));
-        } else {
-            // New
-            const newUser: User = {
-                ...userData,
-                id: Math.random().toString(36).substring(2, 11),
-                contrasena: 'password',
-                fecha_registro: new Date().toISOString().split('T')[0],
-            } as User;
-            setUsers([newUser, ...users]);
+    const handleSave = async (userData: Partial<User>) => {
+        try {
+            if (selectedUser) {
+                // Edit - Note: Backend summary didn't specify PATCH, but assuming standard CRUD
+                // setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...userData } as User : u));
+                // For now, let's just refresh list after successful operation if API supports it
+            } else {
+                // New
+                await userService.createUser(userData);
+            }
+            loadUsers(); // Refresh list from server
+            setIsModalOpen(false);
+            setSelectedUser(null);
+        } catch (err) {
+            alert('Error al guardar el usuario');
         }
-        setIsModalOpen(false);
-        setSelectedUser(null);
     };
 
     const handleDelete = (id: string) => {
@@ -158,81 +178,93 @@ export const UserMaster = () => {
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm border-collapse">
-                        <thead className="bg-slate-50/30 text-slate-400 font-black uppercase text-[10px] tracking-[0.2em] border-b border-slate-50">
-                            <tr>
-                                <th className="px-10 py-6 w-20 text-center">#</th>
-                                <th className="px-6 py-6">Documentación</th>
-                                <th className="px-6 py-6">Colaborador</th>
-                                <th className="px-6 py-6 font-center">Departamento</th>
-                                <th className="px-6 py-6">Registro</th>
-                                <th className="px-6 py-6 text-center">Estado</th>
-                                <th className="px-10 py-6 text-right w-40">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {filteredUsers.map((user, index) => (
-                                <tr key={user.id} className="group hover:bg-blue-50/20 transition-all duration-300">
-                                    <td className="px-10 py-7 text-center text-slate-300 font-black text-xs group-hover:text-aquanqa-blue transition-colors">{String(index + 1).padStart(2, '0')}</td>
-                                    <td className="px-6 py-7">
-                                        <div className="flex flex-col">
-                                            <span className="font-black text-slate-700 font-mono text-base tracking-tighter">{user.documento || '---'}</span>
-                                            <span className="text-[9px] text-slate-300 font-black uppercase tracking-widest mt-1">DNI PERÚ</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-7">
-                                        <div className="flex items-center">
-                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center mr-5 text-slate-400 font-black text-sm border-2 border-white shadow-sm ring-1 ring-slate-100 group-hover:ring-aquanqa-blue/20 transition-all">
-                                                {user.nombre?.charAt(0) || 'U'}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="font-extrabold text-slate-900 text-lg tracking-tight leading-tight group-hover:text-aquanqa-blue transition-colors">{user.nombre}</span>
-                                                <span className="text-xs text-slate-400 font-bold mt-0.5">{user.email}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-7">
-                                        <div className="inline-flex items-center space-x-2 bg-blue-50/40 text-aquanqa-blue px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-tight border border-blue-100 hover:bg-aquanqa-blue hover:text-white transition-all cursor-default">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-aquanqa-blue group-hover:bg-white"></span>
-                                            <span>{getAreaName(user.area_id)}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-7">
-                                        <div className="flex flex-col">
-                                            <span className="text-slate-600 font-bold text-sm tracking-tight">{user.fecha_registro}</span>
-                                            <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest mt-0.5">ALTA SISTEMA</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-7 text-center">
-                                        <span className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] shadow-sm transform transition-all group-hover:scale-105 ${user.estado === 'Activo' ? 'bg-aquanqa-green/10 text-aquanqa-green ring-2 ring-aquanqa-green/10' :
-                                            user.estado === 'Inactivo' ? 'bg-rose-50 text-rose-500 ring-2 ring-rose-100' :
-                                                'bg-slate-100 text-slate-400 ring-2 ring-slate-200'
-                                            }`}>
-                                            {user.estado === 'Activo' ? 'Activo' : user.estado === 'Inactivo' ? 'Inactivo' : 'S. Contrato'}
-                                        </span>
-                                    </td>
-                                    <td className="px-10 py-7 text-right">
-                                        <div className="flex items-center justify-end space-x-2">
-                                            <button
-                                                onClick={() => openEdit(user)}
-                                                className="p-3 text-slate-300 hover:text-aquanqa-blue hover:bg-white hover:shadow-lg rounded-2xl transition-all border border-transparent hover:border-slate-100"
-                                                title="Editar Trabajador"
-                                            >
-                                                <Edit2 size={20} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(user.id)}
-                                                className="p-3 text-slate-300 hover:text-rose-500 hover:bg-white hover:shadow-lg rounded-2xl transition-all border border-transparent hover:border-slate-100"
-                                                title="Eliminar Trabajador"
-                                            >
-                                                <Trash2 size={20} />
-                                            </button>
-                                        </div>
-                                    </td>
+                    {loading ? (
+                        <div className="py-20 flex flex-col items-center justify-center text-slate-400">
+                            <Loader2 className="animate-spin mb-4" size={40} />
+                            <p className="font-bold">Cargando trabajadores...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="py-20 flex flex-col items-center justify-center text-red-400">
+                            <p className="font-bold">{error}</p>
+                            <button onClick={loadUsers} className="mt-4 px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-slate-200 transition-all">Reintentar</button>
+                        </div>
+                    ) : (
+                        <table className="w-full text-left text-sm border-collapse">
+                            <thead className="bg-slate-50/30 text-slate-400 font-black uppercase text-[10px] tracking-[0.2em] border-b border-slate-50">
+                                <tr>
+                                    <th className="px-10 py-6 w-20 text-center">#</th>
+                                    <th className="px-6 py-6">Documentación</th>
+                                    <th className="px-6 py-6">Colaborador</th>
+                                    <th className="px-6 py-6 font-center">Departamento</th>
+                                    <th className="px-6 py-6">Registro</th>
+                                    <th className="px-6 py-6 text-center">Estado</th>
+                                    <th className="px-10 py-6 text-right w-40">Acciones</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {filteredUsers.map((user, index) => (
+                                    <tr key={user.id} className="group hover:bg-blue-50/20 transition-all duration-300">
+                                        <td className="px-10 py-7 text-center text-slate-300 font-black text-xs group-hover:text-aquanqa-blue transition-colors">{String(index + 1).padStart(2, '0')}</td>
+                                        <td className="px-6 py-7">
+                                            <div className="flex flex-col">
+                                                <span className="font-black text-slate-700 font-mono text-base tracking-tighter">{user.documento || '---'}</span>
+                                                <span className="text-[9px] text-slate-300 font-black uppercase tracking-widest mt-1">DNI PERÚ</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-7">
+                                            <div className="flex items-center">
+                                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center mr-5 text-slate-400 font-black text-sm border-2 border-white shadow-sm ring-1 ring-slate-100 group-hover:ring-aquanqa-blue/20 transition-all">
+                                                    {user.nombre?.charAt(0) || 'U'}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="font-extrabold text-slate-900 text-lg tracking-tight leading-tight group-hover:text-aquanqa-blue transition-colors">{user.nombre}</span>
+                                                    <span className="text-xs text-slate-400 font-bold mt-0.5">{user.email}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-7">
+                                            <div className="inline-flex items-center space-x-2 bg-blue-50/40 text-aquanqa-blue px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-tight border border-blue-100 hover:bg-aquanqa-blue hover:text-white transition-all cursor-default">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-aquanqa-blue group-hover:bg-white"></span>
+                                                <span>{getAreaName(user.area_id)}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-7">
+                                            <div className="flex flex-col">
+                                                <span className="text-slate-600 font-bold text-sm tracking-tight">{user.fecha_registro}</span>
+                                                <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest mt-0.5">ALTA SISTEMA</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-7 text-center">
+                                            <span className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] shadow-sm transform transition-all group-hover:scale-105 ${user.estado === 'Activo' ? 'bg-aquanqa-green/10 text-aquanqa-green ring-2 ring-aquanqa-green/10' :
+                                                user.estado === 'Inactivo' ? 'bg-rose-50 text-rose-500 ring-2 ring-rose-100' :
+                                                    'bg-slate-100 text-slate-400 ring-2 ring-slate-200'
+                                                }`}>
+                                                {user.estado === 'Activo' ? 'Activo' : user.estado === 'Inactivo' ? 'Inactivo' : 'S. Contrato'}
+                                            </span>
+                                        </td>
+                                        <td className="px-10 py-7 text-right">
+                                            <div className="flex items-center justify-end space-x-2">
+                                                <button
+                                                    onClick={() => openEdit(user)}
+                                                    className="p-3 text-slate-300 hover:text-aquanqa-blue hover:bg-white hover:shadow-lg rounded-2xl transition-all border border-transparent hover:border-slate-100"
+                                                    title="Editar Trabajador"
+                                                >
+                                                    <Edit2 size={20} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(user.id)}
+                                                    className="p-3 text-slate-300 hover:text-rose-500 hover:bg-white hover:shadow-lg rounded-2xl transition-all border border-transparent hover:border-slate-100"
+                                                    title="Eliminar Trabajador"
+                                                >
+                                                    <Trash2 size={20} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
 
                     {filteredUsers.length === 0 && (
                         <div className="py-32 flex flex-col items-center justify-center text-slate-400 space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">

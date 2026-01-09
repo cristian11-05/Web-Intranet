@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary logs
+*tsc_errors*
+*final_tsc_errors*
+

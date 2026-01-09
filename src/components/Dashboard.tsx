@@ -1,13 +1,16 @@
+import { useState, useEffect } from 'react';
 import { Layout } from './Layout';
-import { MOCK_JUSTIFICATIONS, MOCK_SUGGESTIONS } from '../data/mockData';
+import { justificationService } from '../services/justification.service';
+import { suggestionService } from '../services/suggestion.service';
+import { Loader2 } from 'lucide-react';
 
 const StatCard = ({ title, count, subtitle, type }: { title: string; count: number; subtitle: string; type?: 'default' | 'success' | 'warning' | 'danger' }) => {
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
             <div className="flex flex-col items-center">
                 <span className={`text-4xl font-bold mb-2 ${type === 'success' ? 'text-aquanqa-green' :
-                        type === 'warning' ? 'text-aquanqa-orange' :
-                            type === 'danger' ? 'text-red-500' : 'text-aquanqa-dark'
+                    type === 'warning' ? 'text-aquanqa-orange' :
+                        type === 'danger' ? 'text-red-500' : 'text-aquanqa-dark'
                     }`}>
                     {count}
                 </span>
@@ -19,19 +22,59 @@ const StatCard = ({ title, count, subtitle, type }: { title: string; count: numb
 };
 
 export const Dashboard = () => {
-    // Calcular contadores reales basados en Mocks
-    const totalJustif = MOCK_JUSTIFICATIONS.length + 153; // Simulando más datos 
-    const aprobadas = MOCK_JUSTIFICATIONS.filter(j => j.estado === 'aprobado').length + 147;
-    const pendientes = MOCK_JUSTIFICATIONS.filter(j => j.estado === 'pendiente').length + 4;
-    const rechazadas = MOCK_JUSTIFICATIONS.filter(j => j.estado === 'rechazado').length + 2;
+    const [stats, setStats] = useState({
+        totalJustif: 0,
+        aprobadas: 0,
+        pendientes: 0,
+        rechazadas: 0,
+        totalSugerencias: 0,
+        reclamos: 0,
+        sugerencias: 0,
+    });
+    const [loading, setLoading] = useState(true);
 
-    const totalSugerencias = MOCK_SUGGESTIONS.length + 33;
-    const reclamos = MOCK_SUGGESTIONS.filter(s => s.tipo === 'reclamo').length + 11;
-    const sugerencias = MOCK_SUGGESTIONS.filter(s => s.tipo === 'sugerencia').length + 22;
+    useEffect(() => {
+        loadDashboardStats();
+    }, []);
+
+    const loadDashboardStats = async () => {
+        try {
+            setLoading(true);
+            const [justif, sug] = await Promise.all([
+                justificationService.getAllJustifications(),
+                suggestionService.getAllSuggestions(),
+            ]);
+
+            setStats({
+                totalJustif: justif.length,
+                aprobadas: justif.filter(j => j.estado === 'aprobado').length,
+                pendientes: justif.filter(j => j.estado === 'pendiente').length,
+                rechazadas: justif.filter(j => j.estado === 'rechazado').length,
+                totalSugerencias: sug.length,
+                reclamos: sug.filter(s => s.tipo === 'reclamo').length,
+                sugerencias: sug.filter(s => s.tipo === 'sugerencia').length,
+            });
+        } catch (error) {
+            console.error('Error cargando estadísticas:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <Layout>
+                <div className="h-[60vh] flex flex-col items-center justify-center text-slate-400">
+                    <Loader2 className="animate-spin mb-4" size={48} />
+                    <p className="font-bold">Cargando tablero informativo...</p>
+                </div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout>
-            <div className="space-y-8">
+            <div className="space-y-8 animate-in fade-in duration-700">
                 {/* Sección Justificaciones */}
                 <div>
                     <div className="flex items-center justify-between mb-6">
@@ -39,10 +82,10 @@ export const Dashboard = () => {
                         <button className="bg-aquanqa-dark text-white px-4 py-2 rounded-lg text-sm hover:bg-slate-800 transition">Ver todas</button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <StatCard count={totalJustif} title="Total" subtitle="Total de Justificaciones" />
-                        <StatCard count={aprobadas} title="Aprobadas" subtitle="Solicitudes aprobadas" type="success" />
-                        <StatCard count={pendientes} title="Pendientes" subtitle="Por revisar" type="warning" />
-                        <StatCard count={rechazadas} title="Rechazadas" subtitle="Solicitudes rechazadas" type="danger" />
+                        <StatCard count={stats.totalJustif} title="Total" subtitle="Total de Justificaciones" />
+                        <StatCard count={stats.aprobadas} title="Aprobadas" subtitle="Solicitudes aprobadas" type="success" />
+                        <StatCard count={stats.pendientes} title="Pendientes" subtitle="Por revisar" type="warning" />
+                        <StatCard count={stats.rechazadas} title="Rechazadas" subtitle="Solicitudes rechazadas" type="danger" />
                     </div>
                 </div>
 
@@ -53,9 +96,9 @@ export const Dashboard = () => {
                         <button className="bg-aquanqa-dark text-white px-4 py-2 rounded-lg text-sm hover:bg-slate-800 transition">Ver todas</button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <StatCard count={totalSugerencias} title="Total General" subtitle="Sugerencias + Reclamos" />
-                        <StatCard count={sugerencias} title="Sugerencias" subtitle="Ideas y propuestas" type="success" />
-                        <StatCard count={reclamos} title="Reclamos" subtitle="Reportes de problemas" type="danger" />
+                        <StatCard count={stats.totalSugerencias} title="Total General" subtitle="Sugerencias + Reclamos" />
+                        <StatCard count={stats.sugerencias} title="Sugerencias" subtitle="Ideas y propuestas" type="success" />
+                        <StatCard count={stats.reclamos} title="Reclamos" subtitle="Reportes de problemas" type="danger" />
                     </div>
                 </div>
             </div>
