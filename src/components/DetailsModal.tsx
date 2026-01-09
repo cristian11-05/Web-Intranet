@@ -1,3 +1,4 @@
+import React from 'react';
 import { X } from 'lucide-react';
 
 // Simplified interface for data used in the modal to avoid assignment errors
@@ -33,7 +34,12 @@ export const DetailsModal = ({ isOpen, onClose, data, title }: DetailsModalProps
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="bg-aquanqa-dark text-white p-4 flex justify-between items-center">
                     <h3 className="text-lg font-bold">{title}</h3>
-                    <button onClick={onClose} className="hover:bg-slate-700 p-1 rounded-full transition-colors">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Cerrar modal"
+                        className="hover:bg-slate-700 p-1 rounded-full transition-colors"
+                    >
                         <X size={20} />
                     </button>
                 </div>

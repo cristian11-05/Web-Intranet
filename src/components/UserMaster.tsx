@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from './Layout';
 import { MOCK_AREAS, User } from '../data/mockData';
 import { Search, UserPlus, Edit2, Trash2, FileDown, UploadCloud, UserCircle, Loader2 } from 'lucide-react';
@@ -109,6 +109,7 @@ export const UserMaster = () => {
                 <div className="flex items-center justify-between mb-8">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Filtros de Trabajadores</h3>
                     <button
+                        type="button"
                         onClick={() => { setFilterArea('Todas'); setFilterDoc(''); setFilterName(''); setSearchTerm(''); }}
                         className="text-xs text-aquanqa-blue hover:text-aquanqa-dark transition-colors font-black uppercase tracking-wider"
                     >
@@ -117,10 +118,11 @@ export const UserMaster = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                     <div className="group">
-                        <label className="text-[10px] font-black text-slate-400 mb-1 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest">Zona de Procedencia (Área)</label>
+                        <label htmlFor="filterArea" className="text-[10px] font-black text-slate-400 mb-1 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest">Zona de Procedencia (Área)</label>
                         <select
+                            id="filterArea"
                             value={filterArea}
-                            onChange={(e) => setFilterArea(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterArea(e.target.value)}
                             className="w-full border-b-2 border-slate-100 py-3 focus:border-aquanqa-blue outline-none bg-transparent text-sm font-bold transition-all appearance-none cursor-pointer"
                         >
                             <option value="Todas">Filtro zona de procedencia</option>
@@ -130,22 +132,24 @@ export const UserMaster = () => {
                         </select>
                     </div>
                     <div className="group">
-                        <label className="text-[10px] font-black text-slate-400 mb-1 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest">Listado de Nro. de Documento</label>
+                        <label htmlFor="filterDoc" className="text-[10px] font-black text-slate-400 mb-1 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest">Listado de Nro. de Documento</label>
                         <input
+                            id="filterDoc"
                             type="text"
                             placeholder="Filtro nro de documento"
                             value={filterDoc}
-                            onChange={(e) => setFilterDoc(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterDoc(e.target.value)}
                             className="w-full border-b-2 border-slate-100 py-3 focus:border-aquanqa-blue outline-none text-sm font-bold transition-all placeholder:font-medium placeholder:text-slate-200"
                         />
                     </div>
                     <div className="group">
-                        <label className="text-[10px] font-black text-slate-400 mb-1 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest">Nombre Trabajador</label>
+                        <label htmlFor="filterName" className="text-[10px] font-black text-slate-400 mb-1 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest">Nombre Trabajador</label>
                         <input
+                            id="filterName"
                             type="text"
                             placeholder="Filtro nombre de trabajador"
                             value={filterName}
-                            onChange={(e) => setFilterName(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterName(e.target.value)}
                             className="w-full border-b-2 border-slate-100 py-3 focus:border-aquanqa-blue outline-none text-sm font-bold transition-all placeholder:font-medium placeholder:text-slate-200"
                         />
                     </div>
