@@ -11,8 +11,8 @@ export interface LoginResponse {
 }
 
 export const authService = {
-    login: async (identifier: string, contrasena: string): Promise<LoginResponse> => {
-        const response = await api.post('/auth/login', { identifier, contrasena });
+    login: async (username: string, password: string): Promise<LoginResponse> => {
+        const response = await api.post('/auth/login', { username, password });
         const data = response as unknown as LoginResponse;
 
         if (data.access_token) {

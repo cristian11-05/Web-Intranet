@@ -27,3 +27,5 @@ dist-ssr
 *tsc_errors*
 *final_tsc_errors*
 
+
+.env
