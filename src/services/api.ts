@@ -22,11 +22,20 @@ api.interceptors.request.use(
 // Interceptor to handle standardized response format { status: true, data: { ... }, message: "" }
 api.interceptors.response.use(
     (response) => {
+        // Some backends return { status: true, data: { ... } }
+        // Others return just { ...data }
         const { status, data, message } = response.data;
-        if (status === false) {
-            return Promise.reject(new Error(message || 'Error en la respuesta del servidor'));
+
+        // If 'status' is explicitly defined, we assume it serves as a success flag
+        if (typeof status !== 'undefined') {
+            if (status === false) {
+                return Promise.reject(new Error(message || 'Error en la respuesta del servidor'));
+            }
+            return data;
         }
-        return data; // Return only the data portion to the caller
+
+        // Otherwise, assume the entire response.data is the payload
+        return response.data;
     },
     (error) => {
         if (error.response?.status === 401) {
