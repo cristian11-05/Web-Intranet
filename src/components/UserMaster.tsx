@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from './Layout';
 import { MOCK_AREAS, User } from '../data/mockData';
-import { Search, UserPlus, Edit2, Trash2, FileDown, UploadCloud, UserCircle, Loader2 } from 'lucide-react';
+import { Search, UserPlus, Edit2, Trash2, FileDown, UploadCloud, UserCircle, Loader2, Trash } from 'lucide-react';
 import { UserModal } from './UserModal';
 import { userService } from '../services/user.service';
+import * as XLSX from 'xlsx';
 
 export const UserMaster = () => {
     const [users, setUsers] = useState<User[]>([]);
@@ -16,6 +17,8 @@ export const UserMaster = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
     useEffect(() => {
         loadUsers();
@@ -53,9 +56,8 @@ export const UserMaster = () => {
     const handleSave = async (userData: Partial<User>) => {
         try {
             if (selectedUser) {
-                // Edit - Note: Backend summary didn't specify PATCH, but assuming standard CRUD
-                // setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...userData } as User : u));
-                // For now, let's just refresh list after successful operation if API supports it
+                // Update existing user
+                await userService.updateUser(selectedUser.id, userData);
             } else {
                 // New
                 await userService.createUser(userData);
@@ -68,15 +70,91 @@ export const UserMaster = () => {
         }
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (confirm('¿Estás seguro de eliminar a este trabajador?')) {
-            setUsers(users.filter(u => u.id !== id));
+            try {
+                await userService.deleteUser(id);
+                setUsers(users.filter(u => u.id !== id));
+            } catch (err) {
+                alert('Error al eliminar el usuario');
+            }
         }
     };
 
     const openEdit = (user: User) => {
         setSelectedUser(user);
         setIsModalOpen(true);
+    };
+
+    const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const binaryStr = event.target?.result;
+                const workbook = XLSX.read(binaryStr, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const data = XLSX.utils.sheet_to_json<any>(sheet);
+
+                // Process Excel data: DNI, Apellido_paterno, apellido_materno, nombres, tipo_de_contrato
+                const usersToCreate = data.map((row: any) => ({
+                    documento: row.DNI || row.dni,
+                    nombre: `${row.nombres || ''} ${row.Apellido_paterno || ''} ${row.apellido_materno || ''}`.trim(),
+                    rol: (row.tipo_de_contrato === 'OBR' || row.tipo_de_contrato === 'obr') ? 'obrero' : 'administrativo',
+                    estado: 'Activo',
+                }));
+
+                // Send to backend (you'll need to implement this in userService)
+                usersToCreate.forEach(async (user) => {
+                    try {
+                        await userService.createUser(user);
+                    } catch (err) {
+                        console.error('Error creating user:', err);
+                    }
+                });
+
+                setTimeout(() => loadUsers(), 1000); // Reload after short delay
+                alert(`Se procesaron ${usersToCreate.length} trabajadores`);
+            } catch (err) {
+                alert('Error al procesar el archivo Excel');
+                console.error(err);
+            }
+        };
+        reader.readAsBinaryString(file);
+        e.target.value = ''; // Reset input
+    };
+
+    const handleBulkDelete = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const binaryStr = event.target?.result;
+                const workbook = XLSX.read(binaryStr, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const data = XLSX.utils.sheet_to_json<any>(sheet);
+
+                // Extract DNIs to delete
+                const dnisToDelete = data.map((row: any) => row.DNI || row.dni).filter(Boolean);
+
+                if (confirm(`¿Estás seguro de eliminar ${dnisToDelete.length} trabajadores?`)) {
+                    // Filter out users with matching DNI
+                    setUsers(users.filter(u => !dnisToDelete.includes(u.documento)));
+                    alert(`Se eliminaron ${dnisToDelete.length} trabajadores`);
+                }
+            } catch (err) {
+                alert('Error al procesar el archivo Excel');
+                console.error(err);
+            }
+        };
+        reader.readAsBinaryString(file);
+        e.target.value = ''; // Reset input
     };
 
     return (
@@ -90,10 +168,34 @@ export const UserMaster = () => {
                     <p className="text-slate-500 font-medium tracking-tight">Gestiona el personal y permisos del sistema RRHH</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                    <button className="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-all font-bold shadow-sm text-sm">
+                    <input
+                        type="file"
+                        accept=".xlsx,.xls"
+                        onChange={handleBulkUpload}
+                        className="hidden"
+                        id="bulk-upload"
+                    />
+                    <label
+                        htmlFor="bulk-upload"
+                        className="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-all font-bold shadow-sm text-sm cursor-pointer"
+                    >
                         <UploadCloud size={18} className="text-slate-400" />
                         <span>Carga Masiva</span>
-                    </button>
+                    </label>
+                    <input
+                        type="file"
+                        accept=".xlsx,.xls"
+                        onChange={handleBulkDelete}
+                        className="hidden"
+                        id="bulk-delete"
+                    />
+                    <label
+                        htmlFor="bulk-delete"
+                        className="flex items-center space-x-2 px-5 py-2.5 bg-white border border-rose-200 rounded-xl text-rose-600 hover:bg-rose-50 transition-all font-bold shadow-sm text-sm cursor-pointer"
+                    >
+                        <Trash size={18} className="text-rose-400" />
+                        <span>Baja Masiva</span>
+                    </label>
                     <button
                         onClick={() => { setSelectedUser(null); setIsModalOpen(true); }}
                         className="flex items-center space-x-2 px-6 py-2.5 bg-aquanqa-blue text-white rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-blue-100 font-bold text-sm"

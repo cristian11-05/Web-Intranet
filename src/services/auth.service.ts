@@ -18,6 +18,7 @@ export const authService = {
         if (data.access_token) {
             localStorage.setItem('access_token', data.access_token);
             localStorage.setItem('user_role', data.user.role);
+            localStorage.setItem('user_data', JSON.stringify(data.user));
         }
 
         return data;
@@ -26,14 +27,18 @@ export const authService = {
     logout: () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('user_role');
+        localStorage.removeItem('user_data');
         window.location.href = '/login';
     },
 
     getCurrentUser: () => {
-        const token = localStorage.getItem('access_token');
-        if (!token) return null;
-        // You could also decode the JWT here if needed
-        return token;
+        const userData = localStorage.getItem('user_data');
+        if (!userData) return null;
+        try {
+            return JSON.parse(userData);
+        } catch {
+            return null;
+        }
     },
 
     isAuthenticated: () => {

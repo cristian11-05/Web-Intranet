@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, User as UserIcon, Mail, Shield, Building, ToggleLeft } from 'lucide-react';
+import { X, Save, User as UserIcon, Shield, ToggleLeft } from 'lucide-react';
 import { User, MOCK_AREAS } from '../data/mockData';
 
 interface UserModalProps {
@@ -12,9 +12,7 @@ interface UserModalProps {
 export const UserModal = ({ isOpen, onClose, onSave, user }: UserModalProps) => {
     const [formData, setFormData] = useState<Partial<User>>({
         nombre: '',
-        email: '',
-        rol: 'empleado',
-        area_id: '1',
+        rol: 'obrero',
         estado: 'Activo',
         documento: '',
     });
@@ -25,9 +23,7 @@ export const UserModal = ({ isOpen, onClose, onSave, user }: UserModalProps) => 
         } else {
             setFormData({
                 nombre: '',
-                email: '',
-                rol: 'empleado',
-                area_id: '1',
+                rol: 'obrero',
                 estado: 'Activo',
                 documento: '',
             });
@@ -84,19 +80,7 @@ export const UserModal = ({ isOpen, onClose, onSave, user }: UserModalProps) => 
                                 />
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-gray-500 flex items-center">
-                                    <Mail size={12} className="mr-1" /> CORREO ELECTRÓNICO
-                                </label>
-                                <input
-                                    type="email"
-                                    required
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    placeholder="correo@aquanqa.com"
-                                    className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none transition-colors text-sm font-medium"
-                                />
-                            </div>
+
 
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-gray-500 flex items-center">
@@ -106,10 +90,15 @@ export const UserModal = ({ isOpen, onClose, onSave, user }: UserModalProps) => 
                                     type="text"
                                     required
                                     maxLength={8}
+                                    pattern="[0-9]{8}"
                                     value={formData.documento}
-                                    onChange={(e) => setFormData({ ...formData, documento: e.target.value })}
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, '').slice(0, 8);
+                                        setFormData({ ...formData, documento: value });
+                                    }}
                                     placeholder="00000000"
                                     className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none transition-colors text-sm font-medium"
+                                    title="Ingrese exactamente 8 dígitos"
                                 />
                             </div>
                         </div>
@@ -118,37 +107,21 @@ export const UserModal = ({ isOpen, onClose, onSave, user }: UserModalProps) => 
                         <div className="space-y-6">
                             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Configuración de Sistema</h4>
 
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-gray-500 flex items-center">
-                                    <Building size={12} className="mr-1" /> ÁREA / DEPARTAMENTO
-                                </label>
-                                <select
-                                    name="area_id"
-                                    value={formData.area_id}
-                                    onChange={(e) => setFormData({ ...formData, area_id: e.target.value })}
-                                    className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none bg-transparent text-sm font-medium"
-                                    title="Seleccionar área"
-                                >
-                                    {MOCK_AREAS.map(area => (
-                                        <option key={area.id} value={area.id}>{area.nombre}</option>
-                                    ))}
-                                </select>
-                            </div>
+
 
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-gray-500 flex items-center">
-                                    <Shield size={12} className="mr-1" /> ROL DE ACCESO
+                                    <Shield size={12} className="mr-1" /> TIPO DE CONTRATO
                                 </label>
                                 <select
                                     name="rol"
                                     value={formData.rol}
                                     onChange={(e) => setFormData({ ...formData, rol: e.target.value as any })}
                                     className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none bg-transparent text-sm font-medium"
-                                    title="Seleccionar rol"
+                                    title="Seleccionar tipo de contrato"
                                 >
-                                    <option value="empleado">Empleado</option>
-                                    <option value="gestor">Gestor</option>
-                                    <option value="admin">Administrador</option>
+                                    <option value="obrero">Obrero (OBR)</option>
+                                    <option value="administrativo">Administrativo (ADM)</option>
                                 </select>
                             </div>
 

@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, CheckSquare, LogOut, User } from 'lucide-react';
+import { LayoutDashboard, FileText, CheckSquare, LogOut, User, MessageSquare } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 const SidebarItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => {
     const location = useLocation();
@@ -20,6 +21,22 @@ const SidebarItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: 
 };
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
+    const [userName, setUserName] = useState('Usuario');
+    const [userRole, setUserRole] = useState('');
+
+    useEffect(() => {
+        const userData = localStorage.getItem('user_data');
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                setUserName(user.nombre || 'Usuario');
+                setUserRole(user.rol || '');
+            } catch (e) {
+                console.error('Error parsing user data:', e);
+            }
+        }
+    }, []);
+
     return (
         <div className="flex min-h-screen bg-aquanqa-bg font-sans">
             {/* Sidebar */}
@@ -33,7 +50,15 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 <nav className="flex-1 p-4 py-6">
                     <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Menú</p>
                     <SidebarItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
-                    <SidebarItem to="/usuarios" icon={User} label="Trabajadores" />
+
+                    {/* Solo Administrativos ven gestión de RRHH */}
+                    {(userRole?.toLowerCase() === 'administrativo' || userRole?.toLowerCase() === 'admin') && (
+                        <>
+                            <SidebarItem to="/usuarios" icon={User} label="Trabajadores" />
+                            <SidebarItem to="/comunicados" icon={MessageSquare} label="Comunicados" />
+                        </>
+                    )}
+
                     <SidebarItem to="/sugerencias" icon={FileText} label="Sugerencias" />
                     <SidebarItem to="/justificaciones" icon={CheckSquare} label="Justificaciones" />
                 </nav>
@@ -53,8 +78,8 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                     <h2 className="text-lg font-medium">Panel de Administración</h2>
                     <div className="flex items-center space-x-4">
                         <div className="text-right hidden md:block">
-                            <p className="text-sm font-medium">Admin User</p>
-                            <p className="text-xs text-aquanqa-blue">Gerente RH | Recursos Humanos</p>
+                            <p className="text-sm font-medium">{userName}</p>
+                            <p className="text-xs text-aquanqa-blue">{userRole || 'Recursos Humanos'}</p>
                         </div>
                         <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-aquanqa-green">
                             <User size={20} />

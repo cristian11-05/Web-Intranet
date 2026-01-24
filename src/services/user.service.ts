@@ -17,5 +17,12 @@ export const userService = {
         return response as unknown as User;
     },
 
-    // Add more methods as needed (update, delete, etc.)
+    updateUser: async (id: string, userData: Partial<User>): Promise<User> => {
+        const response = await api.patch(`/users/${id}`, userData);
+        return response as unknown as User;
+    },
+
+    deleteUser: async (id: string): Promise<void> => {
+        await api.delete(`/users/${id}`);
+    },
 };
