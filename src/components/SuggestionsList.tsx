@@ -125,7 +125,7 @@ export const SuggestionsList = () => {
             <DetailsModal
                 isOpen={!!selectedItem}
                 onClose={() => setSelectedItem(null)}
-                data={selectedItem}
+                data={selectedItem as any}
                 title={selectedItem?.tipo === 'reclamo' ? 'Detalle de Reclamo' : 'Detalle de Sugerencia'}
             />
         </Layout>

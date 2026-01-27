@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Save, User as UserIcon, Shield, ToggleLeft } from 'lucide-react';
-import { User, MOCK_AREAS } from '../data/mockData';
+import { User } from '../data/mockData';
 
 interface UserModalProps {
     isOpen: boolean;
@@ -116,7 +116,7 @@ export const UserModal = ({ isOpen, onClose, onSave, user }: UserModalProps) => 
                                 <select
                                     name="rol"
                                     value={formData.rol}
-                                    onChange={(e) => setFormData({ ...formData, rol: e.target.value as any })}
+                                    onChange={(e) => setFormData({ ...formData, rol: e.target.value as User['rol'] })}
                                     className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none bg-transparent text-sm font-medium"
                                     title="Seleccionar tipo de contrato"
                                 >
@@ -132,7 +132,7 @@ export const UserModal = ({ isOpen, onClose, onSave, user }: UserModalProps) => 
                                 <select
                                     name="estado"
                                     value={formData.estado}
-                                    onChange={(e) => setFormData({ ...formData, estado: e.target.value as any })}
+                                    onChange={(e) => setFormData({ ...formData, estado: e.target.value as User['estado'] })}
                                     className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none bg-transparent text-sm font-medium"
                                     title="Seleccionar estado"
                                 >

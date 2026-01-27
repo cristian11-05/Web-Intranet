@@ -17,7 +17,11 @@ export const ComunicadoModal = ({ isOpen, onClose, onSave, comunicado }: Comunic
 
     useEffect(() => {
         if (comunicado) {
-            setFormData(comunicado);
+            setFormData({
+                titulo: comunicado.titulo,
+                contenido: comunicado.contenido,
+                imagen: comunicado.imagen || ''
+            });
         } else {
             setFormData({ titulo: '', contenido: '', imagen: '' });
         }

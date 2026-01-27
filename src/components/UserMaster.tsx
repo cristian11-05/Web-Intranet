@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from './Layout';
 import { MOCK_AREAS, User } from '../data/mockData';
 import { Search, UserPlus, Edit2, Trash2, FileDown, UploadCloud, UserCircle, Loader2, Trash } from 'lucide-react';
@@ -17,8 +17,6 @@ export const UserMaster = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
-    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
     useEffect(() => {
         loadUsers();
@@ -103,8 +101,8 @@ export const UserMaster = () => {
                 const usersToCreate = data.map((row: any) => ({
                     documento: row.DNI || row.dni,
                     nombre: `${row.nombres || ''} ${row.Apellido_paterno || ''} ${row.apellido_materno || ''}`.trim(),
-                    rol: (row.tipo_de_contrato === 'OBR' || row.tipo_de_contrato === 'obr') ? 'obrero' : 'administrativo',
-                    estado: 'Activo',
+                    rol: ((row.tipo_de_contrato === 'OBR' || row.tipo_de_contrato === 'obr') ? 'obrero' : 'administrativo') as User['rol'],
+                    estado: 'Activo' as User['estado'],
                 }));
 
                 // Send to backend (you'll need to implement this in userService)

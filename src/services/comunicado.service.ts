@@ -16,7 +16,7 @@ export interface Comunicado {
 export const comunicadoService = {
     getAll: async (): Promise<Comunicado[]> => {
         const response = await api.get('/comunicados');
-        return response.data; // api interceptor returns response.data directly based on previous files
+        return response as unknown as Comunicado[];
     },
 
     create: async (data: { titulo: string; contenido: string; imagen?: string }) => {
@@ -30,7 +30,6 @@ export const comunicadoService = {
     },
 
     delete: async (id: string) => {
-        const response = await api.delete(`/comunicados/${id}`);
-        return response;
+        await api.delete(`/comunicados/${id}`);
     }
 };

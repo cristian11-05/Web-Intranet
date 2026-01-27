@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from './Layout';
 import { MessageSquare, Plus, Image as ImageIcon, Calendar, Edit2, Trash2 } from 'lucide-react';
 import { ComunicadoModal } from './ComunicadoModal';
@@ -8,7 +8,7 @@ export const Comunicados = () => {
     const [comunicados, setComunicados] = useState<Comunicado[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedComunicado, setSelectedComunicado] = useState<any | null>(null);
+    const [selectedComunicado, setSelectedComunicado] = useState<Comunicado | null>(null);
 
     useEffect(() => {
         loadComunicados();
@@ -66,14 +66,7 @@ export const Comunicados = () => {
     };
 
     const openEdit = (comunicado: Comunicado) => {
-        // Map backend structure to what modal expects
-        // Modal expects: { titulo, contenido, imagen }
-        // Backend gives: { titulo, contenido, imagen_url }
-        // We pass imagen_url as imagen for the preview
-        setSelectedComunicado({
-            ...comunicado,
-            imagen: comunicado.imagen_url // Map for modal preview
-        });
+        setSelectedComunicado(comunicado);
         setIsModalOpen(true);
     };
 
@@ -181,7 +174,11 @@ export const Comunicados = () => {
                 isOpen={isModalOpen}
                 onClose={() => { setIsModalOpen(false); setSelectedComunicado(null); }}
                 onSave={handleSave}
-                comunicado={selectedComunicado}
+                comunicado={selectedComunicado ? {
+                    titulo: selectedComunicado.titulo,
+                    contenido: selectedComunicado.contenido,
+                    imagen: selectedComunicado.imagen_url
+                } : null}
             />
         </Layout>
     );

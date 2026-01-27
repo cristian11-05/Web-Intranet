@@ -1,4 +1,3 @@
-import React from 'react';
 import { X } from 'lucide-react';
 
 // Simplified interface for data used in the modal to avoid assignment errors

@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, FileText, CheckSquare, LogOut, User, MessageSquare } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 
 const SidebarItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => {
     const location = useLocation();
@@ -20,7 +20,7 @@ const SidebarItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: 
     );
 };
 
-export const Layout = ({ children }: { children: React.ReactNode }) => {
+export const Layout = ({ children }: { children: ReactNode }) => {
     const [userName, setUserName] = useState('Usuario');
     const [userRole, setUserRole] = useState('');
 

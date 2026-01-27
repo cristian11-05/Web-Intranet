@@ -142,7 +142,7 @@ export const JustificationsView = () => {
             <DetailsModal
                 isOpen={!!selectedItem}
                 onClose={() => setSelectedItem(null)}
-                data={selectedItem}
+                data={selectedItem as any}
                 title="Detalle de Justificación"
             />
         </Layout>

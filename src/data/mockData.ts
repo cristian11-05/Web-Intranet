@@ -4,7 +4,7 @@ export interface User {
     email: string;
     contrasena: string;
     area_id: string;
-    rol: 'empleado' | 'gestor' | 'admin';
+    rol: 'empleado' | 'gestor' | 'admin' | 'obrero' | 'administrativo';
     estado: 'Activo' | 'Inactivo' | 'SIN CONTRATO';
     fecha_registro: string;
     documento?: string; // Agregado para el filtro de la imagen
