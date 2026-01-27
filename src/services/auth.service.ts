@@ -5,19 +5,19 @@ export interface LoginResponse {
     user: {
         id: string;
         nombre: string;
-        role: 'ADMIN' | 'GESTOR' | 'EMPLEADO';
+        rol: string;
         email: string;
     };
 }
 
 export const authService = {
-    login: async (username: string, password: string): Promise<LoginResponse> => {
-        const response = await api.post('/auth/login', { username, password });
+    login: async (email: string, password: string): Promise<LoginResponse> => {
+        const response = await api.post('/auth/login', { email, password });
         const data = response as unknown as LoginResponse;
 
         if (data.access_token) {
             localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('user_role', data.user.role);
+            localStorage.setItem('user_role', data.user.rol);
             localStorage.setItem('user_data', JSON.stringify(data.user));
         }
 

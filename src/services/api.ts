@@ -43,7 +43,11 @@ api.interceptors.response.use(
             localStorage.removeItem('access_token');
             window.location.href = '/login';
         }
-        return Promise.reject(error);
+
+        // Extract message from server response if available
+        const serverData = error.response?.data;
+        const serverMessage = serverData?.message || serverData?.error || serverData?.detail || error.message;
+        return Promise.reject(new Error(serverMessage));
     }
 );
 
