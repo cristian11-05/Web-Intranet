@@ -199,3 +199,35 @@ export const MOCK_SUGGESTIONS: Suggestion[] = [
         fecha_creacion: '2024-12-16',
     },
 ];
+
+export const MOCK_COMUNICADOS: Comunicado[] = [
+    {
+        id: '1',
+        titulo: 'Bienvenidos a la Nueva Intranet',
+        contenido: 'Estamos felices de lanzar nuestra nueva plataforma de RRHH para mejorar la comunicación interna.',
+        fecha_publicacion: '2024-12-20',
+        activo: true,
+        autor: { nombre: 'RRHH Team', rol: 'admin' }
+    },
+    {
+        id: '2',
+        titulo: 'Horario Navideño',
+        contenido: 'Se les informa que el día 24 de diciembre la salida será a la 1:00 PM.',
+        fecha_publicacion: '2024-12-21',
+        activo: true,
+        autor: { nombre: 'Gerencia', rol: 'admin' }
+    }
+];
+
+export interface Comunicado {
+    id: string;
+    titulo: string;
+    contenido: string;
+    imagen_url?: string;
+    fecha_publicacion?: string;
+    autor?: {
+        nombre: string;
+        rol: string;
+    };
+    activo?: boolean;
+}

@@ -1,8 +1,9 @@
-import api from './api';
-import { Justification } from '../data/mockData';
+import api, { USE_MOCK } from './api';
+import { Justification, MOCK_JUSTIFICATIONS } from '../data/mockData';
 
 export const justificationService = {
     getAllJustifications: async (): Promise<Justification[]> => {
+        if (USE_MOCK) return MOCK_JUSTIFICATIONS;
         const response = await api.get('/justifications');
         return response as unknown as Justification[];
     },

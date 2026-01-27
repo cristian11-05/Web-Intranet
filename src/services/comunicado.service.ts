@@ -1,4 +1,5 @@
-import api from './api';
+import api, { USE_MOCK } from './api';
+import { MOCK_COMUNICADOS } from '../data/mockData';
 
 export interface Comunicado {
     id: string;
@@ -15,6 +16,7 @@ export interface Comunicado {
 
 export const comunicadoService = {
     getAll: async (): Promise<Comunicado[]> => {
+        if (USE_MOCK) return MOCK_COMUNICADOS;
         const response = await api.get('/comunicados');
         return response as unknown as Comunicado[];
     },

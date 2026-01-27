@@ -1,4 +1,5 @@
-import api from './api';
+import api, { USE_MOCK } from './api';
+import { MOCK_USERS } from '../data/mockData';
 
 export interface LoginResponse {
     access_token: string;
@@ -12,6 +13,26 @@ export interface LoginResponse {
 
 export const authService = {
     login: async (email: string, password: string): Promise<LoginResponse> => {
+        if (USE_MOCK) {
+            const user = MOCK_USERS.find(u => (u.email === email || u.documento === email) && u.contrasena === password);
+            if (!user) {
+                throw new Error('Credenciales inválidas (Simulación)');
+            }
+            const mockResponse: LoginResponse = {
+                access_token: 'mock-jwt-token',
+                user: {
+                    id: user.id,
+                    nombre: user.nombre,
+                    rol: user.rol,
+                    email: user.email
+                }
+            };
+            localStorage.setItem('access_token', mockResponse.access_token);
+            localStorage.setItem('user_role', mockResponse.user.rol);
+            localStorage.setItem('user_data', JSON.stringify(mockResponse.user));
+            return mockResponse;
+        }
+
         const response = await api.post('/auth/login', { email, password });
         const data = response as unknown as LoginResponse;
 
