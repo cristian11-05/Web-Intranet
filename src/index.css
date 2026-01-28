@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-aquanqa-bg text-aquanqa-dark font-sans;
+  }
+}
