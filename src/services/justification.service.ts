@@ -4,14 +4,20 @@ import { Justification, MOCK_JUSTIFICATIONS } from '../data/mockData';
 export const justificationService = {
     getAllJustifications: async (): Promise<Justification[]> => {
         if (USE_MOCK) return MOCK_JUSTIFICATIONS;
-        const response = await api.get('/justifications');
-        const data: any[] = Array.isArray(response) ? response : [];
+        const response: any = await api.get('/justifications');
 
-        return data.map(item => ({
+        // El backend devuelve { data: [...], meta: {...} }
+        const rawData = Array.isArray(response) ? response : (response.data || []);
+
+        return rawData.map((item: any) => ({
             ...item,
-            area_nombre: item.area?.nombre || 'General',
-            usuario_nombre: item.usuario?.nombre,
-            usuario_documento: item.usuario?.documento
+            id: String(item.id),
+            usuario_id: String(item.usuario_id),
+            area_id: String(item.area_id),
+            // Priorizamos los valores que ya vienen del backend
+            area_nombre: item.area_nombre || item.area?.nombre || 'General',
+            usuario_nombre: item.usuario_nombre || item.usuario?.nombre,
+            usuario_documento: item.usuario_documento || item.usuario?.documento
         })) as Justification[];
     },
 

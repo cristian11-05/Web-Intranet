@@ -23,6 +23,7 @@ export const JustificationsView = () => {
             const data = await justificationService.getAllJustifications();
             setJustifications(data);
             setError('');
+            console.log(data);
         } catch (err) {
             console.error('Error loading:', err);
             setError(err instanceof Error ? err.message : 'No se pudieron cargar las justificaciones');
@@ -112,14 +113,14 @@ export const JustificationsView = () => {
                                     </span>
                                 </div>
 
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">{item.titulo} - {item.fecha_evento}</h3>
+                                <h3 className="text-lg font-bold text-gray-900 mb-1">{item.titulo}</h3>
                                 <p className="text-gray-600 text-sm mb-4 line-clamp-1">{item.descripcion}</p>
 
                                 <div className="flex items-center justify-between text-sm text-gray-500">
                                     <div className="flex items-center space-x-4">
                                         <span className="font-medium text-aquanqa-dark">{item.usuario_nombre}</span>
                                         <span>•</span>
-                                        <span>{item.fecha_evento}</span>
+                                        <span>{new Date(item.fecha_evento).toLocaleDateString()}</span>
                                     </div>
                                 </div>
 

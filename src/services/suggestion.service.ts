@@ -5,13 +5,16 @@ export const suggestionService = {
     getAllSuggestions: async (): Promise<Suggestion[]> => {
         if (USE_MOCK) return MOCK_SUGGESTIONS;
         // Note: User summary didn't specify GET /suggestions, but assuming consistency
-        const response = await api.get('/suggestions');
-        const data: any[] = Array.isArray(response) ? response : [];
+        const response: any = await api.get('/suggestions');
+        const rawData = Array.isArray(response) ? response : (response.data || []);
 
-        return data.map(item => ({
+        return rawData.map((item: any) => ({
             ...item,
-            area_nombre: item.area?.nombre || 'General',
-            usuario_nombre: item.usuario?.nombre,
+            id: String(item.id),
+            usuario_id: String(item.usuario_id),
+            area_id: String(item.area_id),
+            area_nombre: item.area_nombre || item.area?.nombre || 'General',
+            usuario_nombre: item.usuario_nombre || item.usuario?.nombre,
             usuario_rol: item.usuario?.rol
         })) as Suggestion[];
     },
