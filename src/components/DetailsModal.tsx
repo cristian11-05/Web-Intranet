@@ -77,7 +77,11 @@ export const DetailsModal = ({ isOpen, onClose, data, title }: DetailsModalProps
                         <div>
                             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Área</label>
                             <span className="bg-blue-50 text-aquanqa-blue px-2 py-1 rounded text-xs font-bold">
+<<<<<<< HEAD
                                 {data?.area_nombre || (data?.area_id === '1' ? 'Recursos Humanos' : data?.area_id === '2' ? 'Tecnología' : 'Operaciones')}
+=======
+                                {data?.area_nombre || (data?.area_id === '1' ? 'Remuneraciones' : data?.area_id === '2' ? 'Bienestar Social' : data?.area_id === '3' ? 'ADP' : 'Transportes')}
+>>>>>>> other-repo/main
                             </span>
                         </div>
                     </div>

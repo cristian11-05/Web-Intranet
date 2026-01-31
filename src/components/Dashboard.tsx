@@ -47,12 +47,27 @@ export const Dashboard = () => {
 
             setStats({
                 totalJustif: justif.length,
+<<<<<<< HEAD
                 aprobadas: justif.filter(j => j.estado === 'aprobado').length,
                 pendientes: justif.filter(j => j.estado === 'pendiente').length,
                 rechazadas: justif.filter(j => j.estado === 'rechazado').length,
                 totalSugerencias: sug.length,
                 reclamos: sug.filter(s => s.tipo === 'reclamo').length,
                 sugerencias: sug.filter(s => s.tipo === 'sugerencia').length,
+=======
+                aprobadas: justif.filter(j => j.estado?.toLowerCase() === 'aprobado').length,
+                pendientes: justif.filter(j => j.estado?.toLowerCase() === 'pendiente').length,
+                rechazadas: justif.filter(j => j.estado?.toLowerCase() === 'rechazado').length,
+                totalSugerencias: sug.length,
+                reclamos: sug.filter(s => {
+                    const tipo = s.tipo?.toLowerCase() || '';
+                    return tipo.includes('reclamo') || tipo.includes('escuchamos');
+                }).length,
+                sugerencias: sug.filter(s => {
+                    const tipo = s.tipo?.toLowerCase() || '';
+                    return !tipo.includes('reclamo') && !tipo.includes('escuchamos');
+                }).length,
+>>>>>>> other-repo/main
             });
         } catch (error) {
             console.error('Error cargando estadísticas:', error);
@@ -92,6 +107,7 @@ export const Dashboard = () => {
                 {/* Sección Sugerencias */}
                 <div>
                     <div className="flex items-center justify-between mb-6">
+<<<<<<< HEAD
                         <h2 className="text-2xl font-bold text-aquanqa-dark">Sugerencias y Reclamos</h2>
                         <button className="bg-aquanqa-dark text-white px-4 py-2 rounded-lg text-sm hover:bg-slate-800 transition">Ver todas</button>
                     </div>
@@ -99,6 +115,15 @@ export const Dashboard = () => {
                         <StatCard count={stats.totalSugerencias} title="Total General" subtitle="Sugerencias + Reclamos" />
                         <StatCard count={stats.sugerencias} title="Sugerencias" subtitle="Ideas y propuestas" type="success" />
                         <StatCard count={stats.reclamos} title="Reclamos" subtitle="Reportes de problemas" type="danger" />
+=======
+                        <h2 className="text-2xl font-bold text-aquanqa-dark">Reportes y Consultas</h2>
+                        <button className="bg-aquanqa-dark text-white px-4 py-2 rounded-lg text-sm hover:bg-slate-800 transition">Ver todas</button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <StatCard count={stats.totalSugerencias} title="Total General" subtitle="Reportes + Consultas" />
+                        <StatCard count={stats.sugerencias} title="Reporte de situación" subtitle="Ideas y propuestas" type="success" />
+                        <StatCard count={stats.reclamos} title="Te escuchamos" subtitle="Reportes de problemas" type="danger" />
+>>>>>>> other-repo/main
                     </div>
                 </div>
             </div>

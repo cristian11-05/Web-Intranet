@@ -1,13 +1,13 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+    baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000',
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-export const USE_MOCK = true; // Forzamos modo simulación para que el usuario pueda navegar sin BD
+export const USE_MOCK = false; // Forzamos modo simulación para que el usuario pueda navegar sin BD
 
 // Interceptor to add JWT token to requests
 api.interceptors.request.use(
@@ -33,7 +33,7 @@ api.interceptors.response.use(
             if (status === false) {
                 return Promise.reject(new Error(message || 'Error en la respuesta del servidor'));
             }
-            return data;
+            return Array.isArray(data) ? data : [];
         }
 
         // Otherwise, assume the entire response.data is the payload
@@ -48,7 +48,13 @@ api.interceptors.response.use(
 
         // Extract message from server response if available
         const serverData = error.response?.data;
-        const serverMessage = serverData?.message || serverData?.error || serverData?.detail || error.message;
+        let serverMessage = serverData?.message || serverData?.error || serverData?.detail || error.message;
+
+        // If message is an array (validation errors), join them
+        if (Array.isArray(serverMessage)) {
+            serverMessage = serverMessage.join(', ');
+        }
+
         return Promise.reject(new Error(serverMessage));
     }
 );

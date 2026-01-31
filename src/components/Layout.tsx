@@ -52,7 +52,12 @@ export const Layout = ({ children }: { children: ReactNode }) => {
                     <SidebarItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
 
                     {/* Solo Administrativos ven gestión de RRHH */}
+<<<<<<< HEAD
                     {(userRole?.toLowerCase() === 'administrativo' || userRole?.toLowerCase() === 'admin') && (
+=======
+                    {/* Solo Administrativos ven gestión de RRHH */}
+                    {(userRole?.toLowerCase() === 'administrativo' || userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'administrador') && (
+>>>>>>> other-repo/main
                         <>
                             <SidebarItem to="/usuarios" icon={User} label="Trabajadores" />
                             <SidebarItem to="/comunicados" icon={MessageSquare} label="Comunicados" />

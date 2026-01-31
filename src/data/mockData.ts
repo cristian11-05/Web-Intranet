@@ -67,9 +67,16 @@ export interface Justification {
 }
 
 export const MOCK_AREAS: Area[] = [
+<<<<<<< HEAD
     { id: '1', nombre: 'Recursos Humanos', descripcion: 'Departamento de talento y cultura' },
     { id: '2', nombre: 'Tecnología', descripcion: 'Sistemas e infraestructura' },
     { id: '3', nombre: 'Operaciones', descripcion: 'Planta y logística' },
+=======
+    { id: '1', nombre: 'Remuneraciones', descripcion: 'Gestión de sueldos y salarios' },
+    { id: '2', nombre: 'Bienestar Social', descripcion: 'Beneficios y bienestar del personal' },
+    { id: '3', nombre: 'ADP', descripcion: 'Administración de Personal' },
+    { id: '4', nombre: 'Transportes', descripcion: 'Logística y transporte' },
+>>>>>>> other-repo/main
 ];
 
 export const MOCK_USERS: User[] = [
