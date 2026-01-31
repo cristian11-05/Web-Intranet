@@ -23,23 +23,14 @@ export const SuggestionsList = () => {
             setSuggestions(data);
             setError('');
         } catch (err) {
-<<<<<<< HEAD
-            setError('No se pudieron cargar las sugerencias');
-=======
             console.error('Error loading:', err);
             setError(err instanceof Error ? err.message : 'No se pudieron cargar las sugerencias');
->>>>>>> other-repo/main
         } finally {
             setLoading(false);
         }
     };
 
     const filtered = suggestions.filter(item => {
-<<<<<<< HEAD
-        if (filterType === 'Todos') return true;
-        if (filterType === 'Sugerencias' && item.tipo !== 'sugerencia') return false;
-        if (filterType === 'Reclamos' && item.tipo !== 'reclamo') return false;
-=======
         const tipoCS = item.tipo?.toLowerCase() || '';
         const isReclamo = tipoCS.includes('reclamo') || tipoCS.includes('escuchamos');
         const isSugerencia = !isReclamo;
@@ -47,18 +38,13 @@ export const SuggestionsList = () => {
         if (filterType === 'Todos') return true;
         if (filterType === 'Reporte de situación' && !isSugerencia) return false;
         if (filterType === 'Te escuchamos' && !isReclamo) return false;
->>>>>>> other-repo/main
         return true;
     });
 
     return (
         <Layout>
             <div className="mb-6">
-<<<<<<< HEAD
-                <h1 className="text-2xl font-bold text-aquanqa-dark">Sugerencias y Reclamos</h1>
-=======
                 <h1 className="text-2xl font-bold text-aquanqa-dark">Reportes y Consultas</h1>
->>>>>>> other-repo/main
                 <p className="text-gray-500">Buzón de entrada de comentarios de empleados</p>
             </div>
 
@@ -69,11 +55,7 @@ export const SuggestionsList = () => {
                     <span className="font-medium">Filtrar por:</span>
                 </div>
 
-<<<<<<< HEAD
-                {['Todos', 'Sugerencias', 'Reclamos'].map(type => (
-=======
                 {['Todos', 'Reporte de situación', 'Te escuchamos'].map(type => (
->>>>>>> other-repo/main
                     <button
                         key={type}
                         onClick={() => setFilterType(type)}
@@ -92,11 +74,7 @@ export const SuggestionsList = () => {
                 {loading ? (
                     <div className="py-20 flex flex-col items-center justify-center text-slate-400">
                         <Loader2 className="animate-spin mb-4" size={40} />
-<<<<<<< HEAD
-                        <p className="font-bold">Cargando sugerencias...</p>
-=======
                         <p className="font-bold">Cargando datos...</p>
->>>>>>> other-repo/main
                     </div>
                 ) : error ? (
                     <div className="py-20 flex flex-col items-center justify-center text-red-400">
@@ -106,26 +84,15 @@ export const SuggestionsList = () => {
                 ) : (
                     <>
                         {filtered.map(item => (
-<<<<<<< HEAD
-                            <div key={item.id} className={`bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-all relative group ${item.tipo === 'reclamo' ? 'border-l-4 border-l-aquanqa-orange' : 'border-l-4 border-l-aquanqa-blue'
-=======
                             <div key={item.id} className={`bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-all relative group ${((item.tipo?.toLowerCase() || '').includes('reclamo') || (item.tipo?.toLowerCase() || '').includes('escuchamos'))
                                 ? 'border-l-4 border-l-aquanqa-orange'
                                 : 'border-l-4 border-l-aquanqa-blue'
->>>>>>> other-repo/main
                                 }`}>
 
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                         <div className="flex items-center space-x-3 mb-2">
                                             <h3 className="text-lg font-bold text-gray-900">{item.titulo}</h3>
-<<<<<<< HEAD
-                                            <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider flex items-center ${item.tipo === 'reclamo' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
-                                                }`}>
-                                                {item.tipo === 'reclamo' ? <AlertTriangle size={12} className="mr-1" /> : <MessageSquare size={12} className="mr-1" />}
-                                                {item.tipo}
-                                            </span>
-=======
                                             {(() => {
                                                 const tipoCS = item.tipo?.toLowerCase() || '';
                                                 const isReclamo = tipoCS.includes('reclamo') || tipoCS.includes('escuchamos');
@@ -138,7 +105,6 @@ export const SuggestionsList = () => {
                                                     </span>
                                                 );
                                             })()}
->>>>>>> other-repo/main
                                             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider">
                                                 {item.area_nombre || 'General'}
                                             </span>
@@ -174,11 +140,7 @@ export const SuggestionsList = () => {
                 isOpen={!!selectedItem}
                 onClose={() => setSelectedItem(null)}
                 data={selectedItem as any}
-<<<<<<< HEAD
-                title={selectedItem?.tipo === 'reclamo' ? 'Detalle de Reclamo' : 'Detalle de Sugerencia'}
-=======
                 title={(selectedItem?.tipo?.toLowerCase() || '').includes('reclamo') || (selectedItem?.tipo?.toLowerCase() || '').includes('escuchamos') ? 'Detalle de Te escuchamos' : 'Detalle de Reporte de situación'}
->>>>>>> other-repo/main
             />
         </Layout>
     );
