@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Save, User as UserIcon, Shield, ToggleLeft } from 'lucide-react';
-import { User, Area } from '../data/mockData';
+import { User } from '../data/mockData';
 
 interface UserModalProps {
     isOpen: boolean;
