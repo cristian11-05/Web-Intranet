@@ -4,10 +4,6 @@ import { Justification, MOCK_JUSTIFICATIONS } from '../data/mockData';
 export const justificationService = {
     getAllJustifications: async (): Promise<Justification[]> => {
         if (USE_MOCK) return MOCK_JUSTIFICATIONS;
-<<<<<<< HEAD
-        const response = await api.get('/justifications');
-        return response as unknown as Justification[];
-=======
         const response: any = await api.get('/justifications');
 
         // El backend devuelve { data: [...], meta: {...} }
@@ -23,7 +19,6 @@ export const justificationService = {
             usuario_nombre: item.usuario_nombre || item.usuario?.nombre,
             usuario_documento: item.usuario_documento || item.usuario?.documento
         })) as Justification[];
->>>>>>> other-repo/main
     },
 
     createJustification: async (data: { titulo: string; descripcion: string; fecha_evento: string }): Promise<Justification> => {

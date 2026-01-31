@@ -17,10 +17,6 @@ export interface Comunicado {
 export const comunicadoService = {
     getAll: async (): Promise<Comunicado[]> => {
         if (USE_MOCK) return MOCK_COMUNICADOS;
-<<<<<<< HEAD
-        const response = await api.get('/comunicados');
-        return response as unknown as Comunicado[];
-=======
         const response: any = await api.get('/comunicados');
         const rawData = Array.isArray(response) ? response : (response.data || []);
 
@@ -28,7 +24,6 @@ export const comunicadoService = {
             ...item,
             id: String(item.id)
         })) as Comunicado[];
->>>>>>> other-repo/main
     },
 
     create: async (data: { titulo: string; contenido: string; imagen?: string }) => {

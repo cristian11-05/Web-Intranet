@@ -23,15 +23,9 @@ export const JustificationsView = () => {
             const data = await justificationService.getAllJustifications();
             setJustifications(data);
             setError('');
-<<<<<<< HEAD
-        } catch (err) {
-            setError('No se pudieron cargar las justificaciones');
-=======
-            console.log(data);
         } catch (err) {
             console.error('Error loading:', err);
             setError(err instanceof Error ? err.message : 'No se pudieron cargar las justificaciones');
->>>>>>> other-repo/main
         } finally {
             setLoading(false);
         }
@@ -39,11 +33,7 @@ export const JustificationsView = () => {
 
     const filtered = justifications.filter(item => {
         if (filterArea !== 'Todas' && item.area_nombre !== filterArea) return false;
-<<<<<<< HEAD
-        if (filterStatus !== 'Todas' && item.estado !== filterStatus.toLowerCase()) return false;
-=======
         if (filterStatus !== 'Todas' && item.estado?.toLowerCase() !== filterStatus.toLowerCase()) return false;
->>>>>>> other-repo/main
         return true;
     });
 
@@ -78,11 +68,7 @@ export const JustificationsView = () => {
 
                 <div className="flex items-center space-x-2">
                     <span className="text-gray-500 text-sm font-medium">Área:</span>
-<<<<<<< HEAD
-                    {['Todas', 'Recursos Humanos', 'Tecnología', 'Operaciones'].map(area => (
-=======
                     {['Todas', 'Remuneraciones', 'Bienestar Social', 'ADP', 'Transportes'].map(area => (
->>>>>>> other-repo/main
                         <button
                             key={area}
                             onClick={() => setFilterArea(area)}
@@ -118,35 +104,22 @@ export const JustificationsView = () => {
                                     <span className="bg-gray-100 text-aquanqa-blue px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
                                         {item.area_nombre}
                                     </span>
-<<<<<<< HEAD
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${item.estado === 'pendiente' ? 'bg-orange-100 text-orange-700' :
-                                        item.estado === 'aprobado' ? 'bg-green-100 text-green-700' :
-=======
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${item.estado?.toLowerCase() === 'pendiente' ? 'bg-orange-100 text-orange-700' :
                                         item.estado?.toLowerCase() === 'aprobado' ? 'bg-green-100 text-green-700' :
->>>>>>> other-repo/main
                                             'bg-red-100 text-red-700'
                                         }`}>
                                         {item.estado}
                                     </span>
                                 </div>
 
-<<<<<<< HEAD
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">{item.titulo} - {item.fecha_evento}</h3>
-=======
                                 <h3 className="text-lg font-bold text-gray-900 mb-1">{item.titulo}</h3>
->>>>>>> other-repo/main
                                 <p className="text-gray-600 text-sm mb-4 line-clamp-1">{item.descripcion}</p>
 
                                 <div className="flex items-center justify-between text-sm text-gray-500">
                                     <div className="flex items-center space-x-4">
                                         <span className="font-medium text-aquanqa-dark">{item.usuario_nombre}</span>
                                         <span>•</span>
-<<<<<<< HEAD
-                                        <span>{item.fecha_evento}</span>
-=======
                                         <span>{new Date(item.fecha_evento).toLocaleDateString()}</span>
->>>>>>> other-repo/main
                                     </div>
                                 </div>
 

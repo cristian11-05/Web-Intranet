@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Save, User as UserIcon, Shield, ToggleLeft } from 'lucide-react';
-<<<<<<< HEAD
-import { User } from '../data/mockData';
-=======
 import { User, Area } from '../data/mockData';
->>>>>>> other-repo/main
 
 interface UserModalProps {
     isOpen: boolean;
@@ -124,15 +120,10 @@ export const UserModal = ({ isOpen, onClose, onSave, user }: UserModalProps) => 
                                     className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none bg-transparent text-sm font-medium"
                                     title="Seleccionar tipo de contrato"
                                 >
-<<<<<<< HEAD
-                                    <option value="obrero">Obrero (OBR)</option>
-                                    <option value="administrativo">Administrativo (ADM)</option>
-=======
                                     <option value="obrero">Obrero</option>
                                     <option value="administrativo">Trabajador</option>
->>>>>>> other-repo/main
-                                </select>
-                            </div>
+                                </select >
+                            </div >
 
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-gray-500 flex items-center">
@@ -150,8 +141,8 @@ export const UserModal = ({ isOpen, onClose, onSave, user }: UserModalProps) => 
                                     <option value="SIN CONTRATO">Sin Contrato</option>
                                 </select>
                             </div>
-                        </div>
-                    </div>
+                        </div >
+                    </div >
 
                     <div className="mt-10 flex space-x-3 justify-end">
                         <button
@@ -169,8 +160,8 @@ export const UserModal = ({ isOpen, onClose, onSave, user }: UserModalProps) => 
                             {user ? 'ACTUALIZAR' : 'GUARDAR TRABAJADOR'}
                         </button>
                     </div>
-                </form>
-            </div>
-        </div>
+                </form >
+            </div >
+        </div >
     );
 };
