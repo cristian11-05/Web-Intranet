@@ -2,28 +2,6 @@ import api, { USE_MOCK } from './api';
 import { User, MOCK_USERS } from '../data/mockData';
 
 export const userService = {
-<<<<<<< HEAD
-    getAllUsers: async (filters?: { rol?: string; areaId?: string }): Promise<User[]> => {
-        if (USE_MOCK) return MOCK_USERS;
-        const response = await api.get('/users', { params: filters });
-        return response as unknown as User[];
-    },
-
-    getProfile: async (): Promise<User> => {
-        if (USE_MOCK) return MOCK_USERS[0]; // Retorna el primer admin por defecto en mock
-        const response = await api.get('/users/profile');
-        return response as unknown as User;
-    },
-
-    createUser: async (userData: Partial<User>): Promise<User> => {
-        const response = await api.post('/users', userData);
-        return response as unknown as User;
-    },
-
-    updateUser: async (id: string, userData: Partial<User>): Promise<User> => {
-        const response = await api.patch(`/users/${id}`, userData);
-        return response as unknown as User;
-=======
     getAllUsers: async (filters?: { rol?: string }): Promise<User[]> => {
         if (USE_MOCK) return MOCK_USERS;
         try {
@@ -84,7 +62,6 @@ export const userService = {
         console.log(`Sending update user ${id}:`, payload);
         const response: any = await api.patch(`/users/${id}`, payload);
         return response.data || response;
->>>>>>> other-repo/main
     },
 
     deleteUser: async (id: string): Promise<void> => {
