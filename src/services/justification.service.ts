@@ -26,5 +26,8 @@ export const justificationService = {
         return response as unknown as Justification;
     },
 
-    // Note: Backend might need specific endpoints for approval/rejection later
+    updateStatus: async (id: string, status: string, reason?: string): Promise<Justification> => {
+        const response: any = await api.patch(`/justifications/${id}/status`, { estado: status, razon_rechazo: reason });
+        return response.data || response;
+    },
 };

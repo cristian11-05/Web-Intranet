@@ -36,6 +36,12 @@ export interface Suggestion {
     fecha_creacion: string;
     area_nombre?: string;
     adjuntos?: SuggestionAttachment[];
+    // Simplified fields
+    estado: 'pendiente' | 'revisada';
+    comentario_admin?: string;
+    fecha_actualizacion?: string;
+    usuario_nombre?: string;
+    user?: { nombre: string }; // Optional relation from backend
 }
 
 export interface JustificationAttachment {
@@ -56,7 +62,7 @@ export interface Justification {
     fecha_evento: string;
     hora_inicio: string;
     hora_fin: string;
-    estado: 'pendiente' | 'aprobado' | 'rechazado';
+    estado: 'pendiente' | 'en_proceso' | 'aprobado' | 'rechazado';
     razon_rechazo?: string;
     aprobado_por?: string;
     fecha_creacion: string;
@@ -184,20 +190,25 @@ export const MOCK_SUGGESTIONS: Suggestion[] = [
     {
         id: '201',
         usuario_id: '2',
+        usuario_nombre: 'Juan Pérez',
         area_id: '1',
         tipo: 'sugerencia',
         titulo: 'Implementar sistema de reconocimientos mensuales',
         descripcion: 'Se propone crear un sistema mensual de reconocimiento a empleados destacados para aumentar la motivación...',
         fecha_creacion: '2024-12-18',
+        estado: 'pendiente'
     },
     {
         id: '202',
         usuario_id: '3',
+        usuario_nombre: 'Maria García',
         area_id: '2',
         tipo: 'reclamo',
         titulo: 'Problemas con el sistema de control de asistencia',
         descripcion: 'El sistema marca ausencias cuando se intenta registrar la salida, es un problema recurrente...',
         fecha_creacion: '2024-12-16',
+        estado: 'revisada',
+        comentario_admin: 'Estamos revisando los logs del sistema.'
     },
 ];
 

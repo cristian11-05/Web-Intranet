@@ -106,7 +106,9 @@ export const JustificationsView = () => {
                                     </span>
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${item.estado?.toLowerCase() === 'pendiente' ? 'bg-orange-100 text-orange-700' :
                                         item.estado?.toLowerCase() === 'aprobado' ? 'bg-green-100 text-green-700' :
-                                            'bg-red-100 text-red-700'
+                                            item.estado?.toLowerCase() === 'rechazado' ? 'bg-red-100 text-red-700' :
+                                                item.estado?.toLowerCase() === 'en_proceso' ? 'bg-purple-100 text-purple-700' :
+                                                    'bg-gray-100 text-gray-700'
                                         }`}>
                                         {item.estado}
                                     </span>
@@ -145,6 +147,10 @@ export const JustificationsView = () => {
                 onClose={() => setSelectedItem(null)}
                 data={selectedItem as any}
                 title="Detalle de Justificación"
+                onUpdate={async (id, status, reason) => {
+                    await justificationService.updateStatus(id, status, reason);
+                    loadJustifications();
+                }}
             />
         </Layout>
     );

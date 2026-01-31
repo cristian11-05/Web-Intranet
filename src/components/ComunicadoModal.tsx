@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Save, MessageSquare, Image as ImageIcon, FileText, Upload } from 'lucide-react';
+import { formatImageUrl } from '../services/comunicado.service';
 
 interface ComunicadoModalProps {
     isOpen: boolean;
@@ -37,9 +38,9 @@ export const ComunicadoModal = ({ isOpen, onClose, onSave, comunicado }: Comunic
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            // Validación de tamaño (Máximo 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                alert('La imagen es muy pesada. El tamaño máximo es 5MB.');
+            // Validación de tamaño (Máximo 50MB)
+            if (file.size > 50 * 1024 * 1024) {
+                alert('La imagen es muy pesada. El tamaño máximo es 50MB.');
                 return;
             }
 
@@ -112,7 +113,7 @@ export const ComunicadoModal = ({ isOpen, onClose, onSave, comunicado }: Comunic
                             {formData.imagen ? (
                                 <div className="relative">
                                     <img
-                                        src={formData.imagen}
+                                        src={formatImageUrl(formData.imagen)}
                                         alt="Preview"
                                         className="w-full h-64 object-cover rounded-xl border-2 border-slate-200"
                                     />

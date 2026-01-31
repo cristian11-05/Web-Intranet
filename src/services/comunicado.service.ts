@@ -1,5 +1,13 @@
-import api, { USE_MOCK } from './api';
+import api, { USE_MOCK, API_BASE_URL } from './api';
 import { MOCK_COMUNICADOS } from '../data/mockData';
+
+// Helper to format image URLs from the backend
+export const formatImageUrl = (url?: string) => {
+    if (!url) return undefined;
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    // Prepend API_BASE_URL to relative paths from backend (e.g. /uploads/...)
+    return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
 export interface Comunicado {
     id: string;
@@ -22,7 +30,8 @@ export const comunicadoService = {
 
         return rawData.map((item: any) => ({
             ...item,
-            id: String(item.id)
+            id: String(item.id),
+            imagen_url: formatImageUrl(item.imagen_url || item.imagen)
         })) as Comunicado[];
     },
 

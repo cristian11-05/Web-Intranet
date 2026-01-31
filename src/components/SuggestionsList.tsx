@@ -10,6 +10,7 @@ export const SuggestionsList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [filterType, setFilterType] = useState('Todos');
+    const [filterStatus, setFilterStatus] = useState('Todas');
     const [selectedItem, setSelectedItem] = useState<Suggestion | null>(null);
 
     useEffect(() => {
@@ -35,9 +36,11 @@ export const SuggestionsList = () => {
         const isReclamo = tipoCS.includes('reclamo') || tipoCS.includes('escuchamos');
         const isSugerencia = !isReclamo;
 
-        if (filterType === 'Todos') return true;
         if (filterType === 'Reporte de situación' && !isSugerencia) return false;
         if (filterType === 'Te escuchamos' && !isReclamo) return false;
+
+        if (filterStatus !== 'Todas' && item.estado?.toLowerCase() !== filterStatus.toLowerCase()) return false;
+
         return true;
     });
 
@@ -65,6 +68,25 @@ export const SuggestionsList = () => {
                             }`}
                     >
                         {type}
+                    </button>
+                ))}
+
+                <div className="w-px h-6 bg-gray-300 mx-2 hidden md:block"></div>
+
+                <div className="flex items-center space-x-2 text-gray-500">
+                    <span className="text-sm font-medium">Estado:</span>
+                </div>
+
+                {['Todas', 'Pendiente', 'Revisada'].map(status => (
+                    <button
+                        key={status}
+                        onClick={() => setFilterStatus(status)}
+                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filterStatus === status
+                            ? 'bg-aquanqa-dark text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                    >
+                        {status}
                     </button>
                 ))}
             </div>
@@ -108,13 +130,21 @@ export const SuggestionsList = () => {
                                             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider">
                                                 {item.area_nombre || 'General'}
                                             </span>
+                                            {item.estado && (
+                                                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider ${item.estado === 'pendiente' ? 'bg-orange-100 text-orange-700' :
+                                                    'bg-blue-100 text-blue-700'
+                                                    }`}>
+                                                    {item.estado}
+                                                </span>
+                                            )}
+
                                         </div>
                                         <p className="text-gray-600 text-sm mb-3">{item.descripcion}</p>
 
-                                        <div className="flex items-center text-sm text-gray-400">
-                                            <span>Usuario ID: {item.usuario_id}</span>
+                                        <div className="flex items-center text-sm text-gray-500 font-medium">
+                                            <span>Enviado por {item.usuario_nombre || item.user?.nombre || `Usuario ${item.usuario_id}`}</span>
                                             <span className="mx-2">•</span>
-                                            <span>{item.fecha_creacion}</span>
+                                            <span className="capitalize">{new Date(item.fecha_creacion).toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -141,6 +171,10 @@ export const SuggestionsList = () => {
                 onClose={() => setSelectedItem(null)}
                 data={selectedItem as any}
                 title={(selectedItem?.tipo?.toLowerCase() || '').includes('reclamo') || (selectedItem?.tipo?.toLowerCase() || '').includes('escuchamos') ? 'Detalle de Te escuchamos' : 'Detalle de Reporte de situación'}
+                onUpdate={async (id, status, comment) => {
+                    await suggestionService.updateStatus(id, status, comment);
+                    loadSuggestions();
+                }}
             />
         </Layout>
     );
