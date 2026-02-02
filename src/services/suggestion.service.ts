@@ -1,5 +1,6 @@
 import api, { USE_MOCK } from './api';
 import { Suggestion, MOCK_SUGGESTIONS } from '../data/mockData';
+import { formatImageUrl } from './comunicado.service';
 
 export const suggestionService = {
     getAllSuggestions: async (): Promise<Suggestion[]> => {
@@ -15,7 +16,13 @@ export const suggestionService = {
             area_id: String(item.area_id),
             area_nombre: item.area_nombre || item.area?.nombre || 'General',
             usuario_nombre: item.usuario_nombre || item.usuario?.nombre,
-            usuario_rol: item.usuario?.rol
+            usuario_rol: item.usuario?.rol,
+            // Formatear imágenes si existen
+            adjunto_url: item.adjunto_url ? formatImageUrl(item.adjunto_url) : undefined,
+            adjuntos: (item.adjuntos || []).map((adj: any) => ({
+                ...adj,
+                ruta_archivo: formatImageUrl(adj.ruta_archivo || adj.url || adj.path)
+            }))
         })) as Suggestion[];
     },
 

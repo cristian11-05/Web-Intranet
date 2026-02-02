@@ -51,12 +51,15 @@ export const UserMaster = () => {
         try {
             if (selectedUser) {
                 // Update existing user
-                await userService.updateUser(selectedUser.id, userData);
+                const updatedUser = await userService.updateUser(selectedUser.id, userData);
+                setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, ...updatedUser } : u));
             } else {
                 // New
-                await userService.createUser(userData);
+                const newUser = await userService.createUser(userData);
+                setUsers(prev => [newUser, ...prev]);
             }
-            await loadUsers(); // Wait for reload
+            // Still reload from server to be 100% in sync, but UI already updated
+            loadUsers();
             setIsModalOpen(false);
             setSelectedUser(null);
         } catch (err: any) {

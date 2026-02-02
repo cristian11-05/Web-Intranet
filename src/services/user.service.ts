@@ -11,11 +11,11 @@ export const userService = {
                 console.warn('Unexpected response format in getAllUsers:', response);
                 return [];
             }
-            // Map backend ACTIVO/INACTIVO back to frontend Activo/Inactivo for display
+            // Map backend boolean estado to frontend Activo/Inactivo
             return users.map((u: any) => ({
                 ...u,
                 id: u.id.toString(),
-                estado: u.estado === 'ACTIVO' ? 'Activo' : 'Inactivo',
+                estado: u.estado === true ? 'Activo' : (u.estado === false ? 'Inactivo' : 'SIN CONTRATO'),
                 documento: u.documento || u.dni || '',
             }));
         } catch (error) {
@@ -31,7 +31,8 @@ export const userService = {
         return {
             ...u,
             id: u.id?.toString() || '0',
-            estado: u.estado === 'ACTIVO' ? 'Activo' : 'Inactivo',
+            estado: u.estado === true ? 'Activo' : (u.estado === false ? 'Inactivo' : 'SIN CONTRATO'),
+            documento: u.documento || u.dni || '',
         } as User;
     },
 
@@ -40,13 +41,21 @@ export const userService = {
             documento: userData.documento,
             nombre: userData.nombre,
             email: userData.email,
-            estado: userData.estado?.toUpperCase() === 'ACTIVO' ? 'ACTIVO' : 'INACTIVO',
-            rol: (userData.rol === 'admin' ? 'ADMIN' : (userData.rol === 'gestor' ? 'GESTOR' : 'EMPLEADO')),
+            // Convert 'Activo' strings back to boolean for backend
+            estado: userData.estado === 'Activo',
+            rol: (userData.rol === 'admin' ? 'ADMIN' : (userData.rol === 'gestor' ? 'GESTOR' : (userData.rol === 'obrero' ? 'EMPLEADO' : 'EMPLEADO'))),
             contrasena: userData.contrasena || 'password123',
         };
         console.log('Sending create user:', payload);
         const response: any = await api.post('/users', payload);
-        return response.data || response;
+        const data = response.data || response;
+        // Return mapped object for immediate UI update
+        return {
+            ...data,
+            id: data.id?.toString(),
+            estado: data.estado === true ? 'Activo' : 'Inactivo',
+            documento: data.documento || ''
+        } as User;
     },
 
     updateUser: async (id: string, userData: Partial<User>): Promise<User> => {
@@ -54,14 +63,23 @@ export const userService = {
         if (userData.nombre) payload.nombre = userData.nombre;
         if (userData.documento) payload.documento = userData.documento;
         if (userData.email) payload.email = userData.email;
-        if (userData.estado) payload.estado = userData.estado.toUpperCase() === 'ACTIVO' ? 'ACTIVO' : 'INACTIVO';
+        if (userData.estado !== undefined) {
+            payload.estado = userData.estado === 'Activo';
+        }
         if (userData.rol) {
             payload.rol = (userData.rol === 'admin' ? 'ADMIN' : (userData.rol === 'gestor' ? 'GESTOR' : 'EMPLEADO'));
         }
 
         console.log(`Sending update user ${id}:`, payload);
         const response: any = await api.patch(`/users/${id}`, payload);
-        return response.data || response;
+        const data = response.data || response;
+        // Return mapped object for immediate UI update
+        return {
+            ...data,
+            id: data.id?.toString(),
+            estado: data.estado === true ? 'Activo' : 'Inactivo',
+            documento: data.documento || ''
+        } as User;
     },
 
     deleteUser: async (id: string): Promise<void> => {

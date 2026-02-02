@@ -196,7 +196,10 @@ export const MOCK_SUGGESTIONS: Suggestion[] = [
         titulo: 'Implementar sistema de reconocimientos mensuales',
         descripcion: 'Se propone crear un sistema mensual de reconocimiento a empleados destacados para aumentar la motivación...',
         fecha_creacion: '2024-12-18',
-        estado: 'pendiente'
+        estado: 'pendiente',
+        adjuntos: [
+            { id: '1', suggestion_id: '201', nombre_archivo: 'propuesta.jpg', ruta_archivo: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800', tipo_archivo: 'image/jpeg', tamaño: '1.2MB', fecha_carga: '2024-12-18' }
+        ]
     },
     {
         id: '202',
@@ -208,7 +211,11 @@ export const MOCK_SUGGESTIONS: Suggestion[] = [
         descripcion: 'El sistema marca ausencias cuando se intenta registrar la salida, es un problema recurrente...',
         fecha_creacion: '2024-12-16',
         estado: 'revisada',
-        comentario_admin: 'Estamos revisando los logs del sistema.'
+        comentario_admin: 'Estamos revisando los logs del sistema.',
+        adjuntos: [
+            { id: '2', suggestion_id: '202', nombre_archivo: 'error_sistema.jpg', ruta_archivo: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&q=80&w=800', tipo_archivo: 'image/jpeg', tamaño: '0.8MB', fecha_carga: '2024-12-16' },
+            { id: '3', suggestion_id: '202', nombre_archivo: 'Captura.png', ruta_archivo: 'https://images.unsplash.com/photo-1588681664899-f142ff2dc9b1?auto=format&fit=crop&q=80&w=800', tipo_archivo: 'image/png', tamaño: '1.5MB', fecha_carga: '2024-12-16' }
+        ]
     },
 ];
 

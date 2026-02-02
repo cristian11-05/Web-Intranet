@@ -173,6 +173,11 @@ export const SuggestionsList = () => {
                 title={(selectedItem?.tipo?.toLowerCase() || '').includes('reclamo') || (selectedItem?.tipo?.toLowerCase() || '').includes('escuchamos') ? 'Detalle de Te escuchamos' : 'Detalle de Reporte de situación'}
                 onUpdate={async (id, status, comment) => {
                     await suggestionService.updateStatus(id, status, comment);
+                    // Update local state immediately to reflect the change
+                    setSuggestions(prev => prev.map(item =>
+                        item.id === id ? { ...item, estado: status as any, comentario_admin: comment } : item
+                    ));
+                    // Also reload from server to be sure
                     loadSuggestions();
                 }}
             />

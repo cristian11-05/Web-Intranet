@@ -1,5 +1,6 @@
 import api, { USE_MOCK } from './api';
 import { Justification, MOCK_JUSTIFICATIONS } from '../data/mockData';
+import { formatImageUrl } from './comunicado.service';
 
 export const justificationService = {
     getAllJustifications: async (): Promise<Justification[]> => {
@@ -17,7 +18,13 @@ export const justificationService = {
             // Priorizamos los valores que ya vienen del backend
             area_nombre: item.area_nombre || item.area?.nombre || 'General',
             usuario_nombre: item.usuario_nombre || item.usuario?.nombre,
-            usuario_documento: item.usuario_documento || item.usuario?.documento
+            usuario_documento: item.usuario_documento || item.usuario?.documento,
+            // Formatear imágenes si existen
+            adjunto_url: item.adjunto_url ? formatImageUrl(item.adjunto_url) : undefined,
+            adjuntos: (item.adjuntos || []).map((adj: any) => ({
+                ...adj,
+                ruta_archivo: formatImageUrl(adj.ruta_archivo || adj.url || adj.path)
+            }))
         })) as Justification[];
     },
 
@@ -27,7 +34,16 @@ export const justificationService = {
     },
 
     updateStatus: async (id: string, status: string, reason?: string): Promise<Justification> => {
-        const response: any = await api.patch(`/justifications/${id}/status`, { estado: status, razon_rechazo: reason });
-        return response.data || response;
+        try {
+            // Ensure ID is passed as needed by backend (some backends expect number or string)
+            const response: any = await api.patch(`/justifications/${id}/status`, {
+                estado: status,
+                razon_rechazo: reason
+            });
+            return response.data || response;
+        } catch (error: any) {
+            // Rethrow with more context if needed, but api interceptor already does most of it
+            throw error;
+        }
     },
 };

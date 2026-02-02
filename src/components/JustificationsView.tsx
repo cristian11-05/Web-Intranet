@@ -149,6 +149,11 @@ export const JustificationsView = () => {
                 title="Detalle de Justificación"
                 onUpdate={async (id, status, reason) => {
                     await justificationService.updateStatus(id, status, reason);
+                    // Update local state immediately to reflect the change
+                    setJustifications(prev => prev.map(item =>
+                        item.id === id ? { ...item, estado: status as any, razon_rechazo: reason } : item
+                    ));
+                    // Also reload from server to be sure
                     loadJustifications();
                 }}
             />

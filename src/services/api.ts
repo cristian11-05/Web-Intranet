@@ -35,7 +35,8 @@ api.interceptors.response.use(
             if (status === false) {
                 return Promise.reject(new Error(message || 'Error en la respuesta del servidor'));
             }
-            return Array.isArray(data) ? data : [];
+            // Return data as is, whether it's an array or an object
+            return data;
         }
 
         // Otherwise, assume the entire response.data is the payload
