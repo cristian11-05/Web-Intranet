@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Layout } from './Layout';
-import { Justification } from '../data/mockData';
+import { Justification, JUSTIFICATION_STATUS } from '../data/mockData';
 import { Filter, ChevronRight, Loader2 } from 'lucide-react';
 import { DetailsModal } from './DetailsModal';
 import { justificationService } from '../services/justification.service';
@@ -33,7 +33,10 @@ export const JustificationsView = () => {
 
     const filtered = justifications.filter(item => {
         if (filterArea !== 'Todas' && item.area_nombre !== filterArea) return false;
-        if (filterStatus !== 'Todas' && item.estado?.toLowerCase() !== filterStatus.toLowerCase()) return false;
+        if (filterStatus === 'Pendiente' && item.estado !== JUSTIFICATION_STATUS.PENDING) return false;
+        if (filterStatus === 'Aprobado' && item.estado !== JUSTIFICATION_STATUS.APPROVED) return false;
+        if (filterStatus === 'Rechazado' && item.estado !== JUSTIFICATION_STATUS.REJECTED) return false;
+        // if (filterStatus === 'En Proceso' && item.estado !== JUSTIFICATION_STATUS.IN_PROCESS) return false; // If we had In Process
         return true;
     });
 
@@ -104,13 +107,15 @@ export const JustificationsView = () => {
                                     <span className="bg-gray-100 text-aquanqa-blue px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
                                         {item.area_nombre}
                                     </span>
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${item.estado?.toLowerCase() === 'pendiente' ? 'bg-orange-100 text-orange-700' :
-                                        item.estado?.toLowerCase() === 'aprobado' ? 'bg-green-100 text-green-700' :
-                                            item.estado?.toLowerCase() === 'rechazado' ? 'bg-red-100 text-red-700' :
-                                                item.estado?.toLowerCase() === 'en_proceso' ? 'bg-purple-100 text-purple-700' :
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${item.estado === JUSTIFICATION_STATUS.PENDING ? 'bg-orange-100 text-orange-700' :
+                                            item.estado === JUSTIFICATION_STATUS.APPROVED ? 'bg-green-100 text-green-700' :
+                                                item.estado === JUSTIFICATION_STATUS.REJECTED ? 'bg-red-100 text-red-700' :
                                                     'bg-gray-100 text-gray-700'
                                         }`}>
-                                        {item.estado}
+                                        {item.estado === JUSTIFICATION_STATUS.PENDING ? 'Pendiente' :
+                                            item.estado === JUSTIFICATION_STATUS.APPROVED ? 'Aprobado' :
+                                                item.estado === JUSTIFICATION_STATUS.REJECTED ? 'Rechazado' :
+                                                    'Desconocido'}
                                     </span>
                                 </div>
 

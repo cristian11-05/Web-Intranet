@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { X, CheckCircle, XCircle, Clock, Plus, Loader2 } from 'lucide-react';
+import { X, CheckCircle, XCircle, Plus, Loader2 } from 'lucide-react';
+import { JUSTIFICATION_STATUS, SUGGESTION_STATUS } from '../data/mockData';
 
 // Simplified interface for data used in the modal to avoid assignment errors
 interface DetailsData {
@@ -8,7 +9,7 @@ interface DetailsData {
     descripcion?: string;
     fecha_creacion?: string;
     fecha_evento?: string;
-    estado?: string;
+    estado?: number;
     usuario_id?: string;
     usuario_nombre?: string;
     area_id?: string;
@@ -25,12 +26,12 @@ interface DetailsModalProps {
     onClose: () => void;
     data: DetailsData | null;
     title: string;
-    onUpdate?: (id: string, status: string, commentOrReason?: string) => Promise<void>;
+    onUpdate?: (id: string, status: number, commentOrReason?: string) => Promise<void>;
 }
 
 export const DetailsModal = ({ isOpen, onClose, data, title, onUpdate }: DetailsModalProps) => {
     const [actionComment, setActionComment] = useState('');
-    const [actionType, setActionType] = useState<string | null>(null);
+    const [actionType, setActionType] = useState<number | null>(null);
     const [showCommentInput, setShowCommentInput] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -40,7 +41,7 @@ export const DetailsModal = ({ isOpen, onClose, data, title, onUpdate }: Details
 
     const isJustification = !data.tipo; // If no 'tipo', it's a justification
 
-    const handleActionClick = (status: string, requiresInput: boolean = false) => {
+    const handleActionClick = (status: number, requiresInput: boolean = false) => {
         setActionType(status);
         if (requiresInput) {
             setActionComment('');
@@ -50,7 +51,7 @@ export const DetailsModal = ({ isOpen, onClose, data, title, onUpdate }: Details
         }
     };
 
-    const handleSubmit = async (status: string) => {
+    const handleSubmit = async (status: number) => {
         try {
             setIsSubmitting(true);
             if (onUpdate && data.id) {
@@ -117,16 +118,18 @@ export const DetailsModal = ({ isOpen, onClose, data, title, onUpdate }: Details
                                 <h2 className="text-xl font-bold text-gray-900 mb-1">{data?.titulo}</h2>
                                 <p className="text-sm text-gray-400 font-medium">{formatDate(data?.fecha_evento || data?.fecha_creacion)}</p>
                             </div>
-                            {data?.estado && (
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${data.estado.toLowerCase().includes('aprobada') || data.estado.toLowerCase() === 'aprobado' ? 'bg-green-100 text-green-700' :
-                                    data.estado.toLowerCase().includes('rechazada') || data.estado.toLowerCase() === 'rechazado' ? 'bg-red-100 text-red-700' :
-                                        data.estado.toLowerCase().includes('revisada') ? 'bg-blue-100 text-blue-700' :
-                                            data.estado.toLowerCase().includes('proceso') ? 'bg-purple-100 text-purple-700' :
-                                                'bg-orange-100 text-orange-700'
-                                    }`}>
-                                    {data.estado}
-                                </span>
-                            )}
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${data.estado === JUSTIFICATION_STATUS.APPROVED ? 'bg-green-100 text-green-700' :
+                                data.estado === JUSTIFICATION_STATUS.REJECTED ? 'bg-red-100 text-red-700' :
+                                    data.estado === SUGGESTION_STATUS.REVIEWED ? 'bg-blue-100 text-blue-700' :
+                                        data.estado === JUSTIFICATION_STATUS.PENDING ? 'bg-orange-100 text-orange-700' :
+                                            'bg-gray-100 text-gray-700'
+                                }`}>
+                                {data.estado === JUSTIFICATION_STATUS.APPROVED ? 'Aprobado' :
+                                    data.estado === JUSTIFICATION_STATUS.REJECTED ? 'Rechazado' :
+                                        data.estado === SUGGESTION_STATUS.REVIEWED ? 'Revisada' :
+                                            data.estado === JUSTIFICATION_STATUS.PENDING ? 'Pendiente' :
+                                                'Desconocido'}
+                            </span>
                         </div>
 
                         {/* Content */}
@@ -202,14 +205,14 @@ export const DetailsModal = ({ isOpen, onClose, data, title, onUpdate }: Details
                         {showCommentInput ? (
                             <div className="space-y-3 animate-in slide-in-from-bottom-2 duration-300">
                                 <label className="text-sm font-bold text-gray-700">
-                                    {actionType === 'rechazado' ? 'Motivo del rechazo (Obligatorio)' : 'Agregar un comentario (Opcional)'}
+                                    {actionType === JUSTIFICATION_STATUS.REJECTED ? 'Motivo del rechazo (Obligatorio)' : 'Agregar un comentario (Opcional)'}
                                 </label>
                                 <textarea
                                     value={actionComment}
                                     onChange={(e) => setActionComment(e.target.value)}
                                     className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-aquanqa-blue outline-none transition-all shadow-inner"
                                     rows={3}
-                                    placeholder={actionType === 'rechazado' ? 'Explica por qué se rechaza...' : 'Escribe un comentario...'}
+                                    placeholder={actionType === JUSTIFICATION_STATUS.REJECTED ? 'Explica por qué se rechaza...' : 'Escribe un comentario...'}
                                     autoFocus
                                 />
                                 <div className="flex justify-end space-x-2">
@@ -221,7 +224,7 @@ export const DetailsModal = ({ isOpen, onClose, data, title, onUpdate }: Details
                                     </button>
                                     <button
                                         onClick={() => handleSubmit(actionType!)}
-                                        disabled={(actionType === 'rechazado' && !actionComment.trim()) || isSubmitting}
+                                        disabled={(actionType === JUSTIFICATION_STATUS.REJECTED && !actionComment.trim()) || isSubmitting}
                                         className="px-6 py-2 bg-aquanqa-dark text-white rounded-lg text-xs font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm flex items-center"
                                     >
                                         {isSubmitting ? (
@@ -240,28 +243,23 @@ export const DetailsModal = ({ isOpen, onClose, data, title, onUpdate }: Details
                                     {onUpdate && isJustification ? (
                                         // Actions for Justifications
                                         <>
-                                            {data?.estado !== 'aprobado' && (
-                                                <button onClick={() => handleActionClick('aprobado')} className="flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition shadow-sm">
+                                            {data?.estado !== JUSTIFICATION_STATUS.APPROVED && (
+                                                <button onClick={() => handleActionClick(JUSTIFICATION_STATUS.APPROVED)} className="flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition shadow-sm">
                                                     <CheckCircle size={14} className="mr-1" /> Aprobar
                                                 </button>
                                             )}
-                                            {data?.estado !== 'rechazado' && (
-                                                <button onClick={() => handleActionClick('rechazado', true)} className="flex items-center px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition shadow-sm">
+                                            {data?.estado !== JUSTIFICATION_STATUS.REJECTED && (
+                                                <button onClick={() => handleActionClick(JUSTIFICATION_STATUS.REJECTED, true)} className="flex items-center px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition shadow-sm">
                                                     <XCircle size={14} className="mr-1" /> Rechazar
-                                                </button>
-                                            )}
-                                            {data?.estado !== 'en_proceso' && data?.estado !== 'aprobado' && data?.estado !== 'rechazado' && (
-                                                <button onClick={() => handleActionClick('en_proceso')} className="flex items-center px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-bold hover:bg-purple-700 transition shadow-sm">
-                                                    <Clock size={14} className="mr-1" /> En Proceso
                                                 </button>
                                             )}
                                         </>
                                     ) : onUpdate ? (
                                         // Simplified Actions for Suggestions (Te escuchamos / Reportes)
                                         <>
-                                            {data?.estado === 'pendiente' ? (
+                                            {data?.estado === SUGGESTION_STATUS.PENDING ? (
                                                 <button
-                                                    onClick={() => handleActionClick('revisada', true)}
+                                                    onClick={() => handleActionClick(SUGGESTION_STATUS.REVIEWED, true)}
                                                     className="flex items-center px-5 py-2.5 bg-aquanqa-blue text-white rounded-lg text-sm font-bold hover:bg-opacity-90 hover:scale-105 active:scale-95 transition-all shadow-md"
                                                 >
                                                     <CheckCircle size={18} className="mr-2" /> Marcar como revisada

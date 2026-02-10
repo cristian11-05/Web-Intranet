@@ -44,7 +44,7 @@ export const userService = {
             // Convert 'Activo' strings back to boolean for backend
             estado: userData.estado === 'Activo',
             rol: (userData.rol === 'admin' ? 'ADMIN' : (userData.rol === 'gestor' ? 'GESTOR' : (userData.rol === 'obrero' ? 'EMPLEADO' : 'EMPLEADO'))),
-            contrasena: userData.contrasena || 'password123',
+            contrasena: userData.contrasena || userData.documento,
         };
         console.log('Sending create user:', payload);
         const response: any = await api.post('/users', payload);
@@ -84,5 +84,21 @@ export const userService = {
 
     deleteUser: async (id: string): Promise<void> => {
         await api.delete(`/users/${id}`);
+    },
+
+    importUsers: async (file: File): Promise<{ success: number; errors: any[] }> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response: any = await api.post('/users/import', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data || response;
+    },
+
+    bulkDeleteUsers: async (documents: string[], action: 'inactivate' | 'delete' = 'inactivate'): Promise<{ success: number; notFound: string[] }> => {
+        const response: any = await api.post('/users/bulk-delete', { documents, action });
+        return response.data || response;
     },
 };

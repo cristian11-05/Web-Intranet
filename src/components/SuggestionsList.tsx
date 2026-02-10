@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Layout } from './Layout';
-import { Suggestion } from '../data/mockData';
+import { Suggestion, SUGGESTION_STATUS } from '../data/mockData';
 import { Filter, ChevronRight, MessageSquare, AlertTriangle, Loader2 } from 'lucide-react';
 import { DetailsModal } from './DetailsModal';
 import { suggestionService } from '../services/suggestion.service';
@@ -39,7 +39,8 @@ export const SuggestionsList = () => {
         if (filterType === 'Reporte de situación' && !isSugerencia) return false;
         if (filterType === 'Te escuchamos' && !isReclamo) return false;
 
-        if (filterStatus !== 'Todas' && item.estado?.toLowerCase() !== filterStatus.toLowerCase()) return false;
+        if (filterStatus === 'Pendiente' && item.estado !== SUGGESTION_STATUS.PENDING) return false;
+        if (filterStatus === 'Revisada' && item.estado !== SUGGESTION_STATUS.REVIEWED) return false;
 
         return true;
     });
@@ -130,11 +131,11 @@ export const SuggestionsList = () => {
                                             <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider">
                                                 {item.area_nombre || 'General'}
                                             </span>
-                                            {item.estado && (
-                                                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider ${item.estado === 'pendiente' ? 'bg-orange-100 text-orange-700' :
-                                                    'bg-blue-100 text-blue-700'
+                                            {item.estado !== undefined && (
+                                                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider ${item.estado === SUGGESTION_STATUS.PENDING ? 'bg-orange-100 text-orange-700' :
+                                                        'bg-blue-100 text-blue-700'
                                                     }`}>
-                                                    {item.estado}
+                                                    {item.estado === SUGGESTION_STATUS.PENDING ? 'Pendiente' : 'Revisada'}
                                                 </span>
                                             )}
 

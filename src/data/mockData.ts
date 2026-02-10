@@ -26,6 +26,11 @@ export interface SuggestionAttachment {
     fecha_carga: string;
 }
 
+export const SUGGESTION_STATUS = {
+    PENDING: 0,
+    REVIEWED: 1
+};
+
 export interface Suggestion {
     id: string;
     usuario_id: string;
@@ -36,8 +41,8 @@ export interface Suggestion {
     fecha_creacion: string;
     area_nombre?: string;
     adjuntos?: SuggestionAttachment[];
-    // Simplified fields
-    estado: 'pendiente' | 'revisada';
+    // Status is now numeric: 0 (Pending), 1 (Reviewed)
+    estado: number;
     comentario_admin?: string;
     fecha_actualizacion?: string;
     usuario_nombre?: string;
@@ -53,6 +58,19 @@ export interface JustificationAttachment {
     fecha_carga: string;
 }
 
+export const JUSTIFICATION_STATUS = {
+    PENDING: 0,
+    APPROVED: 1,
+    REJECTED: 2,
+    CANCELLED: 3 // Assuming 3 for internal consistency if needed or just use 0/1/2
+};
+
+export const ORDER_STATUS = {
+    PENDING: 0,
+    COMPLETED: 1,
+    CANCELLED: 2
+};
+
 export interface Justification {
     id: string;
     usuario_id: string;
@@ -62,7 +80,8 @@ export interface Justification {
     fecha_evento: string;
     hora_inicio: string;
     hora_fin: string;
-    estado: 'pendiente' | 'en_proceso' | 'aprobado' | 'rechazado';
+    // Status is now numeric: 0 (Pending), 1 (Approved), 2 (Rejected)
+    estado: number;
     razon_rechazo?: string;
     aprobado_por?: string;
     fecha_creacion: string;
@@ -138,7 +157,7 @@ export const MOCK_JUSTIFICATIONS: Justification[] = [
         fecha_evento: '2024-12-20',
         hora_inicio: '10:00',
         hora_fin: '12:00',
-        estado: 'pendiente',
+        estado: JUSTIFICATION_STATUS.PENDING,
         fecha_creacion: '2024-12-18',
         fecha_actualizacion: '2024-12-18',
         adjuntos: [
@@ -163,7 +182,7 @@ export const MOCK_JUSTIFICATIONS: Justification[] = [
         fecha_evento: '2024-12-19',
         hora_inicio: '08:00',
         hora_fin: '17:00',
-        estado: 'rechazado',
+        estado: JUSTIFICATION_STATUS.REJECTED,
         razon_rechazo: 'No se notificó con anticipación.',
         fecha_creacion: '2024-12-17',
         fecha_actualizacion: '2024-12-17',
@@ -179,7 +198,7 @@ export const MOCK_JUSTIFICATIONS: Justification[] = [
         fecha_evento: '2024-12-18',
         hora_inicio: '14:00',
         hora_fin: '18:00',
-        estado: 'aprobado',
+        estado: JUSTIFICATION_STATUS.APPROVED,
         aprobado_por: '1',
         fecha_creacion: '2024-12-15',
         fecha_actualizacion: '2024-12-16',
@@ -196,7 +215,7 @@ export const MOCK_SUGGESTIONS: Suggestion[] = [
         titulo: 'Implementar sistema de reconocimientos mensuales',
         descripcion: 'Se propone crear un sistema mensual de reconocimiento a empleados destacados para aumentar la motivación...',
         fecha_creacion: '2024-12-18',
-        estado: 'pendiente',
+        estado: SUGGESTION_STATUS.PENDING,
         adjuntos: [
             { id: '1', suggestion_id: '201', nombre_archivo: 'propuesta.jpg', ruta_archivo: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800', tipo_archivo: 'image/jpeg', tamaño: '1.2MB', fecha_carga: '2024-12-18' }
         ]
@@ -210,7 +229,7 @@ export const MOCK_SUGGESTIONS: Suggestion[] = [
         titulo: 'Problemas con el sistema de control de asistencia',
         descripcion: 'El sistema marca ausencias cuando se intenta registrar la salida, es un problema recurrente...',
         fecha_creacion: '2024-12-16',
-        estado: 'revisada',
+        estado: SUGGESTION_STATUS.REVIEWED,
         comentario_admin: 'Estamos revisando los logs del sistema.',
         adjuntos: [
             { id: '2', suggestion_id: '202', nombre_archivo: 'error_sistema.jpg', ruta_archivo: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&q=80&w=800', tipo_archivo: 'image/jpeg', tamaño: '0.8MB', fecha_carga: '2024-12-16' },

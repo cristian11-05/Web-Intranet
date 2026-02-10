@@ -6,6 +6,7 @@ import { UserModal } from './UserModal';
 import { userService } from '../services/user.service';
 import * as XLSX from 'xlsx';
 
+
 export const UserMaster = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
@@ -83,54 +84,34 @@ export const UserMaster = () => {
         setIsModalOpen(true);
     };
 
-    const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const binaryStr = event.target?.result;
-                const workbook = XLSX.read(binaryStr, { type: 'binary' });
-                const sheetName = workbook.SheetNames[0];
-                const sheet = workbook.Sheets[sheetName];
-                const data = XLSX.utils.sheet_to_json<any>(sheet);
-
-                // Process Excel data
-                const usersToCreate = data.map((row: any) => ({
-                    documento: (row.DNI || row.dni || '').toString(),
-                    nombre: `${row.nombres || ''} ${row.Apellido_paterno || ''} ${row.apellido_materno || ''}`.trim(),
-                    rol: ((row.tipo_de_contrato === 'OBR' || row.tipo_de_contrato === 'obr') ? 'obrero' : 'administrativo') as User['rol'],
-                    estado: 'Activo' as User['estado'],
-                }));
-
-                // Parallel creation
-                Promise.all(usersToCreate.map(user => userService.createUser(user)))
-                    .then(() => {
-                        loadUsers();
-                        alert(`Se procesaron ${usersToCreate.length} trabajadores`);
-                    })
-                    .catch(err => {
-                        console.error('Error in bulk upload:', err);
-                        alert('Error al crear algunos trabajadores');
-                        loadUsers();
-                    });
-
-            } catch (err) {
-                alert('Error al procesar el archivo Excel');
-                console.error(err);
+        try {
+            setLoading(true);
+            const result = await userService.importUsers(file);
+            alert(`Se procesaron ${result.success} trabajadores correctamente.`);
+            if (result.errors && result.errors.length > 0) {
+                console.warn('Errores en importación:', result.errors);
+                alert(`Hubo errores en ${result.errors.length} filas. Revisa la consola para más detalles.`);
             }
-        };
-        reader.readAsBinaryString(file);
-        e.target.value = '';
+            loadUsers();
+        } catch (err: any) {
+            console.error('Error in bulk upload:', err);
+            alert(err.message || 'Error al procesar la carga masiva');
+        } finally {
+            setLoading(false);
+            e.target.value = '';
+        }
     };
 
-    const handleBulkDelete = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleBulkDelete = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
             try {
                 const binaryStr = event.target?.result;
                 const workbook = XLSX.read(binaryStr, { type: 'binary' });
@@ -138,15 +119,33 @@ export const UserMaster = () => {
                 const sheet = workbook.Sheets[sheetName];
                 const data = XLSX.utils.sheet_to_json<any>(sheet);
 
-                const dnisToDelete = data.map((row: any) => (row.DNI || row.dni || '').toString()).filter(Boolean);
+                // Normalización de headers para encontrar el DNI/Documento
+                const dnisToDelete = data.map((row: any) => {
+                    const keys = Object.keys(row);
+                    const dniKey = keys.find(k => k.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_') === 'documento' || k.toLowerCase().trim() === 'dni');
+                    return (row[dniKey || ''] || '').toString();
+                }).filter(Boolean);
 
-                if (confirm(`¿Estás seguro de eliminar ${dnisToDelete.length} trabajadores?`)) {
-                    setUsers(users.filter(u => !dnisToDelete.includes(u.documento)));
-                    alert(`Se eliminaron ${dnisToDelete.length} trabajadores`);
+                if (dnisToDelete.length === 0) {
+                    alert('No se encontraron números de documento en el archivo Excel. Asegúrate de que la columna se llame "Documento" o "DNI".');
+                    return;
+                }
+
+                const action = confirm(`¿Deseas ELIMINAR permanentemente a estos ${dnisToDelete.length} trabajadores?\n\n- Aceptar: Eliminar de la base de datos\n- Cancelar: Solo inactivarlos (se moverán al final de la lista)`)
+                    ? 'delete'
+                    : 'inactivate';
+
+                if (confirm(`Estás a punto de ${action === 'delete' ? 'ELIMINAR' : 'INACTIVAR'} a ${dnisToDelete.length} trabajadores. ¿Confirmas esta acción?`)) {
+                    setLoading(true);
+                    const result = await userService.bulkDeleteUsers(dnisToDelete, action);
+                    alert(`Proceso completado.\n- Acción: ${action === 'delete' ? 'Eliminación' : 'Inactivación'}\n- Exitosos: ${result.success}\n- No encontrados: ${result.notFound.length}`);
+                    loadUsers();
                 }
             } catch (err) {
-                alert('Error al procesar el archivo Excel');
+                alert('Error al procesar el archivo Excel para bajas');
                 console.error(err);
+            } finally {
+                setLoading(false);
             }
         };
         reader.readAsBinaryString(file);

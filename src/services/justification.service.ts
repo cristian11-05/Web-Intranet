@@ -33,7 +33,7 @@ export const justificationService = {
         return response as unknown as Justification;
     },
 
-    updateStatus: async (id: string, status: string, reason?: string): Promise<Justification> => {
+    updateStatus: async (id: string, status: number, reason?: string): Promise<Justification> => {
         try {
             // Ensure ID is passed as needed by backend (some backends expect number or string)
             const response: any = await api.patch(`/justifications/${id}/status`, {

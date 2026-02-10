@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Layout } from './Layout';
-import { justificationService } from '../services/justification.service';
-import { suggestionService } from '../services/suggestion.service';
+import { dashboardService } from '../services/dashboard.service';
 import { Loader2 } from 'lucide-react';
 
 const StatCard = ({ title, count, subtitle, type }: { title: string; count: number; subtitle: string; type?: 'default' | 'success' | 'warning' | 'danger' }) => {
@@ -40,25 +39,16 @@ export const Dashboard = () => {
     const loadDashboardStats = async () => {
         try {
             setLoading(true);
-            const [justif, sug] = await Promise.all([
-                justificationService.getAllJustifications(),
-                suggestionService.getAllSuggestions(),
-            ]);
+            const data = await dashboardService.getStats();
 
             setStats({
-                totalJustif: justif.length,
-                aprobadas: justif.filter(j => j.estado?.toLowerCase() === 'aprobado').length,
-                pendientes: justif.filter(j => j.estado?.toLowerCase() === 'pendiente').length,
-                rechazadas: justif.filter(j => j.estado?.toLowerCase() === 'rechazado').length,
-                totalSugerencias: sug.length,
-                reclamos: sug.filter(s => {
-                    const tipo = s.tipo?.toLowerCase() || '';
-                    return tipo.includes('reclamo') || tipo.includes('escuchamos');
-                }).length,
-                sugerencias: sug.filter(s => {
-                    const tipo = s.tipo?.toLowerCase() || '';
-                    return !tipo.includes('reclamo') && !tipo.includes('escuchamos');
-                }).length,
+                totalJustif: data.totalJustificaciones,
+                aprobadas: data.aprobadas,
+                pendientes: data.pendientes,
+                rechazadas: data.rechazadas,
+                totalSugerencias: data.totalSugerencias,
+                reclamos: data.teEscuchamos,
+                sugerencias: data.reporteSituacion,
             });
         } catch (error) {
             console.error('Error cargando estadísticas:', error);

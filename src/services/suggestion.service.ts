@@ -31,7 +31,7 @@ export const suggestionService = {
         return response as unknown as Suggestion;
     },
 
-    updateStatus: async (id: string, status: string, comment?: string): Promise<Suggestion> => {
+    updateStatus: async (id: string, status: number, comment?: string): Promise<Suggestion> => {
         const response: any = await api.patch(`/suggestions/${id}/status`, { estado: status, comentario: comment });
         return response.data || response;
     },

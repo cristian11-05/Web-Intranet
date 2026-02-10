@@ -1,12 +1,12 @@
-import api, { USE_MOCK, API_BASE_URL } from './api';
+import api, { USE_MOCK } from './api';
 import { MOCK_COMUNICADOS } from '../data/mockData';
 
 // Helper to format image URLs from the backend
 export const formatImageUrl = (url?: string) => {
     if (!url) return undefined;
-    if (url.startsWith('http') || url.startsWith('data:')) return url;
-    // Prepend API_BASE_URL to relative paths from backend (e.g. /uploads/...)
-    return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+    // Backend now returns full Supabase URLs, so we just return the URL as is.
+    // We keep the check just in case, but no longer prepend API_BASE_URL for relative paths blindly.
+    return url;
 };
 
 export interface Comunicado {
