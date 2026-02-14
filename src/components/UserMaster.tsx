@@ -6,6 +6,13 @@ import { UserModal } from './UserModal';
 import { userService } from '../services/user.service';
 import * as XLSX from 'xlsx';
 
+const normalizeHeader = (header: string) => {
+    return header.toLowerCase()
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, '_');
+};
 
 export const UserMaster = () => {
     const [users, setUsers] = useState<User[]>([]);
@@ -17,6 +24,11 @@ export const UserMaster = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+    // Bulk Delete State
+    const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+    const [pendingDnis, setPendingDnis] = useState<string[]>([]);
+    const [bulkAction, setBulkAction] = useState<'inactivate' | 'delete'>('inactivate');
 
     useEffect(() => {
         loadUsers();
@@ -91,15 +103,15 @@ export const UserMaster = () => {
         try {
             setLoading(true);
             const result = await userService.importUsers(file);
-            alert(`Se procesaron ${result.success} trabajadores correctamente.`);
+            alert(`Carga completada: ${result.success} procesados exitosamente.`);
             if (result.errors && result.errors.length > 0) {
                 console.warn('Errores en importación:', result.errors);
-                alert(`Hubo errores en ${result.errors.length} filas. Revisa la consola para más detalles.`);
+                alert(`Hubo errores en ${result.errors.length} filas. Revisa la consola.`);
             }
             loadUsers();
         } catch (err: any) {
             console.error('Error in bulk upload:', err);
-            alert(err.message || 'Error al procesar la carga masiva');
+            alert('Error al procesar la carga masiva: ' + err.message);
         } finally {
             setLoading(false);
             e.target.value = '';
@@ -115,41 +127,73 @@ export const UserMaster = () => {
             try {
                 const binaryStr = event.target?.result;
                 const workbook = XLSX.read(binaryStr, { type: 'binary' });
-                const sheetName = workbook.SheetNames[0];
-                const sheet = workbook.Sheets[sheetName];
-                const data = XLSX.utils.sheet_to_json<any>(sheet);
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-                // Normalización de headers para encontrar el DNI/Documento
-                const dnisToDelete = data.map((row: any) => {
-                    const keys = Object.keys(row);
-                    const dniKey = keys.find(k => k.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_') === 'documento' || k.toLowerCase().trim() === 'dni');
-                    return (row[dniKey || ''] || '').toString();
-                }).filter(Boolean);
-
-                if (dnisToDelete.length === 0) {
-                    alert('No se encontraron números de documento en el archivo Excel. Asegúrate de que la columna se llame "Documento" o "DNI".');
+                // Flexible mapping
+                const rows = XLSX.utils.sheet_to_json<any>(sheet);
+                if (rows.length === 0) {
+                    alert('El archivo está vacío');
                     return;
                 }
 
-                const action = confirm(`¿Deseas ELIMINAR permanentemente a estos ${dnisToDelete.length} trabajadores?\n\n- Aceptar: Eliminar de la base de datos\n- Cancelar: Solo inactivarlos (se moverán al final de la lista)`)
-                    ? 'delete'
-                    : 'inactivate';
+                // Get normalized headers from the first row keys
+                const firstRow = rows[0];
+                const headerMap: Record<string, string> = {};
+                Object.keys(firstRow).forEach(key => {
+                    headerMap[normalizeHeader(key)] = key;
+                });
 
-                if (confirm(`Estás a punto de ${action === 'delete' ? 'ELIMINAR' : 'INACTIVAR'} a ${dnisToDelete.length} trabajadores. ¿Confirmas esta acción?`)) {
-                    setLoading(true);
-                    const result = await userService.bulkDeleteUsers(dnisToDelete, action);
-                    alert(`Proceso completado.\n- Acción: ${action === 'delete' ? 'Eliminación' : 'Inactivación'}\n- Exitosos: ${result.success}\n- No encontrados: ${result.notFound.length}`);
-                    loadUsers();
+                const dniKey = headerMap['documento'] || headerMap['dni'] || headerMap['nro_documento'] || headerMap['nro_doc'];
+
+                if (!dniKey) {
+                    alert('No se encontró una columna de DNI o Documento. Asegúrate de que el excel tenga una columna llamada "DNI" o "Documento"');
+                    return;
                 }
-            } catch (err) {
-                alert('Error al procesar el archivo Excel para bajas');
-                console.error(err);
-            } finally {
-                setLoading(false);
+
+                const dnis = rows.map(row => row[dniKey]?.toString()).filter(Boolean);
+
+                if (dnis.length === 0) {
+                    alert('No se encontraron números de documento válidos en el archivo');
+                    return;
+                }
+
+                setPendingDnis(dnis);
+                setIsBulkDeleteModalOpen(true);
+            } catch (err: any) {
+                alert('Error al leer el archivo Excel: ' + err.message);
             }
         };
         reader.readAsBinaryString(file);
         e.target.value = '';
+    };
+
+    const confirmBulkAction = async () => {
+        try {
+            setLoading(true);
+            setIsBulkDeleteModalOpen(false);
+            const result = await userService.bulkDelete(pendingDnis, bulkAction);
+            alert(`Acción completada: ${result.success} trabajadores procesados.`);
+            if (result.notFound && result.notFound.length > 0) {
+                console.warn('DNI no encontrados:', result.notFound);
+            }
+            loadUsers();
+        } catch (err: any) {
+            alert('Error al procesar la acción masiva: ' + err.message);
+        } finally {
+            setLoading(false);
+            setPendingDnis([]);
+        }
+    };
+
+    const downloadTemplate = (type: 'carga' | 'baja') => {
+        const headers = type === 'carga'
+            ? [['Nombre', 'Email', 'Documento', 'Rol', 'Estado', 'Area ID']]
+            : [['Documento']];
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(headers);
+        XLSX.utils.book_append_sheet(wb, ws, "Formato");
+        XLSX.writeFile(wb, `formato_${type}_masivo.xlsx`);
     };
 
     return (
@@ -163,16 +207,27 @@ export const UserMaster = () => {
                     <p className="text-slate-500 font-medium tracking-tight">Gestiona el personal y permisos del sistema RRHH</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                    <input type="file" accept=".xlsx,.xls" onChange={handleBulkUpload} className="hidden" id="bulk-upload" />
-                    <label htmlFor="bulk-upload" className="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-all font-bold shadow-sm text-sm cursor-pointer">
-                        <UploadCloud size={18} className="text-slate-400" />
-                        <span>Carga Masiva</span>
-                    </label>
-                    <input type="file" accept=".xlsx,.xls" onChange={handleBulkDelete} className="hidden" id="bulk-delete" />
-                    <label htmlFor="bulk-delete" className="flex items-center space-x-2 px-5 py-2.5 bg-white border border-rose-200 rounded-xl text-rose-600 hover:bg-rose-50 transition-all font-bold shadow-sm text-sm cursor-pointer">
-                        <Trash size={18} className="text-rose-400" />
-                        <span>Baja Masiva</span>
-                    </label>
+                    <div className="flex flex-col">
+                        <input type="file" accept=".xlsx,.xls" onChange={handleBulkUpload} className="hidden" id="bulk-upload" />
+                        <label htmlFor="bulk-upload" className="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-all font-bold shadow-sm text-sm cursor-pointer">
+                            <UploadCloud size={18} className="text-slate-400" />
+                            <span>Carga Masiva</span>
+                        </label>
+                        <button onClick={() => downloadTemplate('carga')} className="text-[10px] text-aquanqa-blue font-bold hover:underline mt-1 text-center">
+                            Descargar Formato
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col">
+                        <input type="file" accept=".xlsx,.xls" onChange={handleBulkDelete} className="hidden" id="bulk-delete" />
+                        <label htmlFor="bulk-delete" className="flex items-center space-x-2 px-5 py-2.5 bg-white border border-rose-200 rounded-xl text-rose-600 hover:bg-rose-50 transition-all font-bold shadow-sm text-sm cursor-pointer">
+                            <Trash size={18} className="text-rose-400" />
+                            <span>Baja Masiva</span>
+                        </label>
+                        <button onClick={() => downloadTemplate('baja')} className="text-[10px] text-rose-500 font-bold hover:underline mt-1 text-center">
+                            Descargar Formato
+                        </button>
+                    </div>
                     <button
                         onClick={() => { setSelectedUser(null); setIsModalOpen(true); }}
                         className="flex items-center space-x-2 px-6 py-2.5 bg-aquanqa-blue text-white rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-blue-100 font-bold text-sm"
@@ -290,7 +345,15 @@ export const UserMaster = () => {
                                         </td>
                                         <td className="px-6 py-7">
                                             <div className="flex flex-col">
-                                                <span className="text-slate-600 font-bold text-sm tracking-tight">{user.fecha_registro}</span>
+                                                <span className="text-slate-600 font-bold text-sm tracking-tight">
+                                                    {user.fecha_registro ? new Date(user.fecha_registro).toLocaleString('es-PE', {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        year: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    }) : '---'}
+                                                </span>
                                                 <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest mt-0.5">ALTA SISTEMA</span>
                                             </div>
                                         </td>
@@ -333,6 +396,60 @@ export const UserMaster = () => {
                 onSave={handleSave}
                 user={selectedUser}
             />
+
+            {/* Bulk Delete Modal */}
+            {isBulkDeleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="bg-rose-600 text-white p-4 flex justify-between items-center">
+                            <h3 className="text-lg font-bold">Confirmar Acción Masiva</h3>
+                            <button onClick={() => setIsBulkDeleteModalOpen(false)} className="hover:bg-rose-700 p-1 rounded-full transition-colors">
+                                <Search size={20} className="rotate-45" /> {/* Close icon substitution or use Lucide X if available in other components */}
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-slate-600 font-medium">
+                                Se han reconocido <span className="font-bold text-rose-600">{pendingDnis.length}</span> trabajadores en el archivo.
+                            </p>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block">Selecciona la acción</label>
+                                <div className="grid grid-cols-1 gap-2">
+                                    <button
+                                        onClick={() => setBulkAction('inactivate')}
+                                        className={`p-4 border-2 rounded-xl flex flex-col items-start transition-all ${bulkAction === 'inactivate' ? 'border-aquanqa-blue bg-blue-50/50 ring-2 ring-aquanqa-blue/10' : 'border-slate-100'}`}
+                                    >
+                                        <span className={`font-bold ${bulkAction === 'inactivate' ? 'text-aquanqa-blue' : 'text-slate-700'}`}>Inhabilitar (Desactivar)</span>
+                                        <span className="text-[10px] text-slate-500">Mantiene al trabajador en la BD pero no podrá ingresar al sistema.</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setBulkAction('delete')}
+                                        className={`p-4 border-2 rounded-xl flex flex-col items-start transition-all ${bulkAction === 'delete' ? 'border-rose-500 bg-rose-50/50 ring-2 ring-rose-100' : 'border-slate-100'}`}
+                                    >
+                                        <span className={`font-bold ${bulkAction === 'delete' ? 'text-rose-500' : 'text-slate-700'}`}>Borrar de la BD (Eliminar Permanente)</span>
+                                        <span className="text-[10px] text-slate-500">Elimina toda la información del trabajador definitivamente.</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 flex space-x-3">
+                                <button
+                                    onClick={() => setIsBulkDeleteModalOpen(false)}
+                                    className="flex-1 px-4 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={confirmBulkAction}
+                                    className={`flex-1 px-4 py-3 text-white rounded-xl font-bold text-sm transition-all shadow-lg ${bulkAction === 'inactivate' ? 'bg-aquanqa-blue hover:bg-blue-600 shadow-blue-100' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-100'}`}
+                                >
+                                    Confirmar {bulkAction === 'inactivate' ? 'Baja' : 'Eliminación'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </Layout>
     );
 };

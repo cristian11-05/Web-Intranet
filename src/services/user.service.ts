@@ -40,11 +40,11 @@ export const userService = {
         const payload = {
             documento: userData.documento,
             nombre: userData.nombre,
-            email: userData.email,
+            email: userData.email || userData.documento, // Default User to DNI
             // Convert 'Activo' strings back to boolean for backend
             estado: userData.estado === 'Activo',
             rol: (userData.rol === 'admin' ? 'ADMIN' : (userData.rol === 'gestor' ? 'GESTOR' : (userData.rol === 'obrero' ? 'EMPLEADO' : 'EMPLEADO'))),
-            contrasena: userData.contrasena || userData.documento,
+            contrasena: userData.contrasena || userData.documento || 'password123',
         };
         console.log('Sending create user:', payload);
         const response: any = await api.post('/users', payload);
@@ -97,8 +97,8 @@ export const userService = {
         return response.data || response;
     },
 
-    bulkDeleteUsers: async (documents: string[], action: 'inactivate' | 'delete' = 'inactivate'): Promise<{ success: number; notFound: string[] }> => {
+    bulkDelete: async (documents: string[], action: 'inactivate' | 'delete' = 'inactivate'): Promise<{ success: number; notFound: string[] }> => {
         const response: any = await api.post('/users/bulk-delete', { documents, action });
         return response.data || response;
-    },
+    }
 };
