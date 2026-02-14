@@ -7,6 +7,7 @@ import { comunicadoService, Comunicado } from '../services/comunicado.service';
 export const Comunicados = () => {
     const [comunicados, setComunicados] = useState<Comunicado[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedComunicado, setSelectedComunicado] = useState<Comunicado | null>(null);
 
@@ -28,6 +29,7 @@ export const Comunicados = () => {
 
     const handleSave = async (comunicadoData: Partial<{ titulo: string; contenido: string; imagen?: string }>) => {
         try {
+            setIsSaving(true);
             if (selectedComunicado) {
                 // Update
                 // Note: The modal returns { titulo, contenido, imagen }. Backend expects 'imagen' with base64/url if changed.
@@ -50,6 +52,8 @@ export const Comunicados = () => {
         } catch (error) {
             console.error('Error saving comunicado:', error);
             alert('Error al guardar el comunicado');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -82,9 +86,9 @@ export const Comunicados = () => {
                 </div>
                 <button
                     onClick={() => { setSelectedComunicado(null); setIsModalOpen(true); }}
-                    className="flex items-center space-x-2 px-6 py-2.5 bg-aquanqa-blue text-white rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-blue-100 font-bold text-sm"
+                    className="flex items-center space-x-3 px-8 py-3 bg-aquanqa-blue text-white rounded-2xl hover:bg-aquanqa-dark hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-200/50 transition-all active:scale-95 font-black text-xs uppercase tracking-[0.1em]"
                 >
-                    <Plus size={18} />
+                    <Plus size={20} />
                     <span>Nuevo Comunicado</span>
                 </button>
             </div>
@@ -137,20 +141,20 @@ export const Comunicados = () => {
                                     </span>
                                 </div>
 
-                                <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-1">
                                     <button
                                         onClick={() => openEdit(comunicado)}
-                                        className="p-2 text-slate-300 hover:text-aquanqa-blue hover:bg-blue-50 rounded-lg transition-all"
+                                        className="p-2.5 text-slate-300 hover:text-aquanqa-blue hover:bg-white hover:shadow-lg hover:border-slate-100 border border-transparent rounded-xl transition-all active:scale-90"
                                         title="Editar"
                                     >
-                                        <Edit2 size={16} />
+                                        <Edit2 size={18} />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(comunicado.id)}
-                                        className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                        className="p-2.5 text-slate-300 hover:text-rose-500 hover:bg-white hover:shadow-lg hover:border-slate-100 border border-transparent rounded-xl transition-all active:scale-90"
                                         title="Eliminar"
                                     >
-                                        <Trash2 size={16} />
+                                        <Trash2 size={18} />
                                     </button>
                                 </div>
                             </div>
@@ -172,8 +176,9 @@ export const Comunicados = () => {
 
             <ComunicadoModal
                 isOpen={isModalOpen}
-                onClose={() => { setIsModalOpen(false); setSelectedComunicado(null); }}
+                onClose={() => { if (!isSaving) { setIsModalOpen(false); setSelectedComunicado(null); } }}
                 onSave={handleSave}
+                isSubmitting={isSaving}
                 comunicado={selectedComunicado ? {
                     titulo: selectedComunicado.titulo,
                     contenido: selectedComunicado.contenido,

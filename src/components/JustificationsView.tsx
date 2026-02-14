@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Layout } from './Layout';
 import { Justification } from '../data/mockData';
 import { Filter, ChevronRight, Loader2 } from 'lucide-react';
@@ -13,11 +13,7 @@ export const JustificationsView = () => {
     const [filterStatus, setFilterStatus] = useState('Todas');
     const [selectedItem, setSelectedItem] = useState<Justification | null>(null);
 
-    useEffect(() => {
-        loadJustifications();
-    }, []);
-
-    const loadJustifications = async () => {
+    const loadJustifications = useCallback(async () => {
         try {
             setLoading(true);
             const data = await justificationService.getAllJustifications();
@@ -29,7 +25,21 @@ export const JustificationsView = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        loadJustifications();
+    }, [loadJustifications]);
+
+    const handleUpdate = useCallback(async (id: string, status: string, reason?: string) => {
+        await justificationService.updateStatus(id, status, reason);
+        // Update local state immediately to reflect the change
+        setJustifications(prev => prev.map(item =>
+            item.id === id ? { ...item, estado: status as any, razon_rechazo: reason } : item
+        ));
+        // Also reload from server to be sure
+        loadJustifications();
+    }, [loadJustifications]);
 
     const filtered = justifications.filter(item => {
         if (filterArea !== 'Todas' && item.area_nombre !== filterArea) return false;
@@ -55,26 +65,26 @@ export const JustificationsView = () => {
                     <button
                         key={status}
                         onClick={() => setFilterStatus(status)}
-                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filterStatus === status
-                            ? 'bg-aquanqa-dark text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        className={`px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 active:scale-95 ${filterStatus === status
+                            ? 'bg-aquanqa-blue text-white shadow-lg shadow-blue-200 ring-2 ring-aquanqa-blue/20'
+                            : 'bg-white border border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
                             }`}
                     >
                         {status}
                     </button>
                 ))}
 
-                <div className="w-px h-6 bg-gray-300 mx-2 hidden md:block"></div>
+                <div className="w-px h-6 bg-slate-100 mx-2 hidden md:block"></div>
 
-                <div className="flex items-center space-x-2">
-                    <span className="text-gray-500 text-sm font-medium">Área:</span>
+                <div className="flex items-center space-x-3">
+                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Área:</span>
                     {['Todas', 'Remuneraciones', 'Bienestar Social', 'ADP', 'Transportes'].map(area => (
                         <button
                             key={area}
                             onClick={() => setFilterArea(area)}
-                            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filterArea === area
-                                ? 'bg-aquanqa-dark text-white'
-                                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                            className={`px-4 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 active:scale-95 ${filterArea === area
+                                ? 'bg-aquanqa-dark text-white shadow-lg shadow-slate-200 ring-2 ring-slate-200'
+                                : 'bg-white border border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
                                 }`}
                         >
                             {area}
@@ -133,9 +143,9 @@ export const JustificationsView = () => {
 
                                 <button
                                     onClick={() => setSelectedItem(item)}
-                                    className="absolute bottom-6 right-6 text-aquanqa-blue hover:text-aquanqa-dark font-medium text-sm flex items-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="absolute bottom-6 right-6 px-4 py-2 bg-aquanqa-blue/5 text-aquanqa-blue hover:bg-aquanqa-blue hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:shadow-lg active:scale-95 translate-y-2 group-hover:translate-y-0"
                                 >
-                                    Ver Detalle <ChevronRight size={16} />
+                                    Ver Detalle <ChevronRight size={14} className="ml-1" />
                                 </button>
                             </div>
                         ))}
@@ -153,15 +163,7 @@ export const JustificationsView = () => {
                 onClose={() => setSelectedItem(null)}
                 data={selectedItem as any}
                 title="Detalle de Justificación"
-                onUpdate={async (id, status, reason) => {
-                    await justificationService.updateStatus(id, status, reason);
-                    // Update local state immediately to reflect the change
-                    setJustifications(prev => prev.map(item =>
-                        item.id === id ? { ...item, estado: status as any, razon_rechazo: reason } : item
-                    ));
-                    // Also reload from server to be sure
-                    loadJustifications();
-                }}
+                onUpdate={handleUpdate}
             />
         </Layout>
     );

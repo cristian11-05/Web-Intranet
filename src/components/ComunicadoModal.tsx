@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, MessageSquare, Image as ImageIcon, FileText, Upload } from 'lucide-react';
+import { X, Save, MessageSquare, Image as ImageIcon, FileText, Upload, Loader2 } from 'lucide-react';
 import { formatImageUrl } from '../services/comunicado.service';
 
 interface ComunicadoModalProps {
@@ -7,9 +7,10 @@ interface ComunicadoModalProps {
     onClose: () => void;
     onSave: (comunicado: Partial<{ titulo: string; contenido: string; imagen?: string }>) => void;
     comunicado?: { titulo: string; contenido: string; imagen?: string } | null;
+    isSubmitting?: boolean;
 }
 
-export const ComunicadoModal = ({ isOpen, onClose, onSave, comunicado }: ComunicadoModalProps) => {
+export const ComunicadoModal = ({ isOpen, onClose, onSave, comunicado, isSubmitting }: ComunicadoModalProps) => {
     const [formData, setFormData] = useState({
         titulo: '',
         contenido: '',
@@ -54,24 +55,27 @@ export const ComunicadoModal = ({ isOpen, onClose, onSave, comunicado }: Comunic
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="bg-aquanqa-dark text-white p-6 flex justify-between items-center">
+            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative border border-slate-100">
+                {/* Header with Background Gradient */}
+                <div className="h-24 bg-gradient-to-br from-aquanqa-blue/5 via-white to-aquanqa-green/5 absolute top-0 left-0 w-full -z-10"></div>
+
+                <div className="px-8 py-6 flex justify-between items-center border-b border-slate-50 relative">
                     <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-slate-700 rounded-lg">
-                            <MessageSquare size={24} className="text-aquanqa-green" />
+                        <div className="p-3 bg-aquanqa-blue/10 rounded-2xl">
+                            <MessageSquare size={24} className="text-aquanqa-blue" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold">{comunicado ? 'Editar Comunicado' : 'Nuevo Comunicado'}</h3>
-                            <p className="text-slate-400 text-xs">Crea anuncios visibles para todos</p>
+                            <h3 className="text-xl font-black text-slate-800 tracking-tight">{comunicado ? 'Editar Comunicado' : 'Nuevo Comunicado'}</h3>
+                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Crea anuncios visibles para todos</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-black/5 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+                        className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-2xl transition-all active:scale-95"
                         title="Cerrar"
                         aria-label="Cerrar modal"
                     >
-                        <X size={20} />
+                        <X size={24} />
                     </button>
                 </div>
 
@@ -147,20 +151,30 @@ export const ComunicadoModal = ({ isOpen, onClose, onSave, comunicado }: Comunic
                         </div>
                     </div>
 
-                    <div className="mt-10 flex space-x-3 justify-end">
+                    <div className="mt-10 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 justify-end items-center bg-slate-50/50 -mx-8 -mb-8 p-8 border-t border-slate-100">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-6 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition font-bold text-sm"
+                            className="w-full sm:w-auto px-6 py-2.5 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all active:scale-95 text-center"
                         >
-                            CANCELAR
+                            Cancelar
                         </button>
                         <button
                             type="submit"
-                            className="px-8 py-2.5 bg-aquanqa-blue text-white rounded-xl hover:bg-opacity-90 transition shadow-lg shadow-blue-200 font-bold text-sm flex items-center"
+                            disabled={isSubmitting}
+                            className="w-full sm:w-auto px-8 py-3 bg-aquanqa-blue text-white rounded-2xl hover:bg-aquanqa-dark hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-200/50 transition-all active:scale-95 font-black text-xs uppercase tracking-[0.1em] flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Save size={18} className="mr-2" />
-                            {comunicado ? 'ACTUALIZAR' : 'PUBLICAR COMUNICADO'}
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 size={18} className="mr-2 animate-spin" />
+                                    <span>Publicando...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Save size={18} className="mr-2" />
+                                    <span>{comunicado ? 'Actualizar Cambios' : 'Publicar Comunicado Ahora'}</span>
+                                </>
+                            )}
                         </button>
                     </div>
                 </form>

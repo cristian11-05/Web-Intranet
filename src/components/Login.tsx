@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 
@@ -76,9 +76,15 @@ export const Login = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full text-center bg-slate-600 text-white py-2 rounded-md hover:bg-slate-700 transition font-medium ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`w-full py-4 rounded-2xl bg-aquanqa-blue text-white font-black text-xs uppercase tracking-[0.2em] relative overflow-hidden transition-all duration-300 shadow-xl shadow-blue-100/50 hover:bg-aquanqa-dark hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group flex items-center justify-center`}
                     >
-                        {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                        {loading ? (
+                            <>
+                                <Loader2 className="animate-spin mr-3" size={18} />
+                                Iniciando sesión...
+                            </>
+                        ) : 'Iniciar Sesión'}
                     </button>
                 </form>
             </div>

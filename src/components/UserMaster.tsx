@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Layout } from './Layout';
 import { User } from '../data/mockData';
-import { Search, UserPlus, Edit2, Trash2, FileDown, UploadCloud, UserCircle, Loader2, Trash } from 'lucide-react';
+import { Search, UserPlus, Edit2, Trash2, FileDown, UploadCloud, UserCircle, Loader2, Trash, X } from 'lucide-react';
 import { UserModal } from './UserModal';
 import { userService } from '../services/user.service';
 import * as XLSX from 'xlsx';
@@ -17,6 +17,7 @@ const normalizeHeader = (header: string) => {
 export const UserMaster = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDoc, setFilterDoc] = useState('');
@@ -29,6 +30,10 @@ export const UserMaster = () => {
     const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
     const [pendingDnis, setPendingDnis] = useState<string[]>([]);
     const [bulkAction, setBulkAction] = useState<'inactivate' | 'delete'>('inactivate');
+
+    // Preview Modal State
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [previewType, setPreviewType] = useState<'carga' | 'baja'>('carga');
 
     useEffect(() => {
         loadUsers();
@@ -62,6 +67,7 @@ export const UserMaster = () => {
 
     const handleSave = async (userData: Partial<User>) => {
         try {
+            setIsSaving(true);
             if (selectedUser) {
                 // Update existing user
                 const updatedUser = await userService.updateUser(selectedUser.id, userData);
@@ -77,6 +83,8 @@ export const UserMaster = () => {
             setSelectedUser(null);
         } catch (err: any) {
             alert(err.message || 'Error al guardar el usuario');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -186,14 +194,13 @@ export const UserMaster = () => {
     };
 
     const downloadTemplate = (type: 'carga' | 'baja') => {
-        const headers = type === 'carga'
-            ? [['Nombre', 'Email', 'Documento', 'Rol', 'Estado', 'Area ID']]
-            : [['Documento']];
+        const headers = [['Nombre', 'Documento', 'Rol', 'Estado', 'Area ID']];
 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(headers);
         XLSX.utils.book_append_sheet(wb, ws, "Formato");
         XLSX.writeFile(wb, `formato_${type}_masivo.xlsx`);
+        setIsPreviewOpen(false);
     };
 
     return (
@@ -209,30 +216,30 @@ export const UserMaster = () => {
                 <div className="flex flex-wrap gap-3">
                     <div className="flex flex-col">
                         <input type="file" accept=".xlsx,.xls" onChange={handleBulkUpload} className="hidden" id="bulk-upload" />
-                        <label htmlFor="bulk-upload" className="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-all font-bold shadow-sm text-sm cursor-pointer">
-                            <UploadCloud size={18} className="text-slate-400" />
+                        <label htmlFor="bulk-upload" className="flex items-center space-x-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-slate-700 hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 font-black shadow-sm text-xs cursor-pointer uppercase tracking-widest">
+                            <UploadCloud size={18} className="text-aquanqa-blue" />
                             <span>Carga Masiva</span>
                         </label>
-                        <button onClick={() => downloadTemplate('carga')} className="text-[10px] text-aquanqa-blue font-bold hover:underline mt-1 text-center">
+                        <button onClick={() => { setPreviewType('carga'); setIsPreviewOpen(true); }} className="text-[9px] text-aquanqa-blue font-black uppercase tracking-widest hover:underline mt-1.5 text-center opacity-70 hover:opacity-100 transition-opacity">
                             Descargar Formato
                         </button>
                     </div>
 
                     <div className="flex flex-col">
                         <input type="file" accept=".xlsx,.xls" onChange={handleBulkDelete} className="hidden" id="bulk-delete" />
-                        <label htmlFor="bulk-delete" className="flex items-center space-x-2 px-5 py-2.5 bg-white border border-rose-200 rounded-xl text-rose-600 hover:bg-rose-50 transition-all font-bold shadow-sm text-sm cursor-pointer">
-                            <Trash size={18} className="text-rose-400" />
+                        <label htmlFor="bulk-delete" className="flex items-center space-x-2 px-6 py-3 bg-white border border-rose-100 rounded-2xl text-rose-600 hover:bg-rose-50 hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 font-black shadow-sm text-xs cursor-pointer uppercase tracking-widest">
+                            <Trash size={18} className="text-rose-500" />
                             <span>Baja Masiva</span>
                         </label>
-                        <button onClick={() => downloadTemplate('baja')} className="text-[10px] text-rose-500 font-bold hover:underline mt-1 text-center">
+                        <button onClick={() => { setPreviewType('baja'); setIsPreviewOpen(true); }} className="text-[9px] text-rose-500 font-black uppercase tracking-widest hover:underline mt-1.5 text-center opacity-70 hover:opacity-100 transition-opacity">
                             Descargar Formato
                         </button>
                     </div>
                     <button
                         onClick={() => { setSelectedUser(null); setIsModalOpen(true); }}
-                        className="flex items-center space-x-2 px-6 py-2.5 bg-aquanqa-blue text-white rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-blue-100 font-bold text-sm"
+                        className="flex items-center space-x-3 px-8 py-3 bg-aquanqa-blue text-white rounded-2xl hover:bg-aquanqa-dark hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-200/50 transition-all active:scale-95 font-black text-xs uppercase tracking-[0.1em]"
                     >
-                        <UserPlus size={18} />
+                        <UserPlus size={20} />
                         <span>Nuevo Trabajador</span>
                     </button>
                 </div>
@@ -292,9 +299,9 @@ export const UserMaster = () => {
                                 className="pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-sm w-full focus:ring-8 focus:ring-aquanqa-blue/5 focus:border-aquanqa-blue outline-none transition-all shadow-inner font-medium"
                             />
                         </div>
-                        <button className="flex items-center justify-center space-x-3 px-7 py-4 bg-aquanqa-green text-white rounded-2xl hover:bg-opacity-90 transition-all shadow-xl shadow-green-100 font-black text-sm uppercase tracking-wider">
+                        <button className="flex items-center justify-center space-x-3 px-8 py-4 bg-aquanqa-green text-white rounded-2xl hover:bg-emerald-600 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-green-200/50 transition-all active:scale-95 font-black text-xs uppercase tracking-widest">
                             <FileDown size={20} />
-                            <span className="hidden lg:inline">Exportar</span>
+                            <span className="hidden lg:inline">Exportar Excel</span>
                         </button>
                     </div>
                 </div>
@@ -367,10 +374,10 @@ export const UserMaster = () => {
                                         </td>
                                         <td className="px-10 py-7 text-right">
                                             <div className="flex items-center justify-end space-x-2">
-                                                <button onClick={() => openEdit(user)} className="p-3 text-slate-300 hover:text-aquanqa-blue hover:bg-white hover:shadow-lg rounded-2xl transition-all border border-transparent hover:border-slate-100" title="Editar Trabajador">
+                                                <button onClick={() => openEdit(user)} className="p-3 text-slate-300 hover:text-aquanqa-blue hover:bg-white hover:shadow-xl hover:border-slate-100 rounded-2xl transition-all border border-transparent active:scale-90" title="Editar Trabajador">
                                                     <Edit2 size={20} />
                                                 </button>
-                                                <button onClick={() => handleDelete(user.id)} className="p-3 text-slate-300 hover:text-rose-500 hover:bg-white hover:shadow-lg rounded-2xl transition-all border border-transparent hover:border-slate-100" title="Eliminar Trabajador">
+                                                <button onClick={() => handleDelete(user.id)} className="p-3 text-slate-300 hover:text-rose-500 hover:bg-white hover:shadow-xl hover:border-slate-100 rounded-2xl transition-all border border-transparent active:scale-90" title="Eliminar Trabajador">
                                                     <Trash2 size={20} />
                                                 </button>
                                             </div>
@@ -392,8 +399,9 @@ export const UserMaster = () => {
 
             <UserModal
                 isOpen={isModalOpen}
-                onClose={() => { setIsModalOpen(false); setSelectedUser(null); }}
+                onClose={() => { if (!isSaving) { setIsModalOpen(false); setSelectedUser(null); } }}
                 onSave={handleSave}
+                isSubmitting={isSaving}
                 user={selectedUser}
             />
 
@@ -435,15 +443,80 @@ export const UserMaster = () => {
                             <div className="pt-4 flex space-x-3">
                                 <button
                                     onClick={() => setIsBulkDeleteModalOpen(false)}
-                                    className="flex-1 px-4 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all"
+                                    className="flex-1 px-4 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 hover:text-slate-800 transition-all active:scale-95"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={confirmBulkAction}
-                                    className={`flex-1 px-4 py-3 text-white rounded-xl font-bold text-sm transition-all shadow-lg ${bulkAction === 'inactivate' ? 'bg-aquanqa-blue hover:bg-blue-600 shadow-blue-100' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-100'}`}
+                                    disabled={loading}
+                                    className={`flex-1 px-4 py-3.5 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed ${bulkAction === 'inactivate' ? 'bg-aquanqa-blue hover:bg-blue-600 shadow-blue-100 hover:shadow-blue-200' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-100 hover:shadow-rose-200'}`}
                                 >
-                                    Confirmar {bulkAction === 'inactivate' ? 'Baja' : 'Eliminación'}
+                                    {loading ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
+                                    {loading ? 'Procesando...' : `Confirmar ${bulkAction === 'inactivate' ? 'Baja' : 'Eliminación'}`}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Preview Modal */}
+            {isPreviewOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20">
+                        <div className="bg-gradient-to-r from-aquanqa-blue to-blue-700 p-8 flex justify-between items-center relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                            <div className="relative z-10">
+                                <h3 className="text-2xl font-black text-white tracking-tight">Vista Previa del Formato</h3>
+                                <p className="text-blue-100 text-[10px] font-black uppercase tracking-widest mt-1 opacity-80">Asegúrate de seguir esta estructura de columnas</p>
+                            </div>
+                            <button
+                                onClick={() => setIsPreviewOpen(false)}
+                                className="bg-white/10 hover:bg-white/20 p-3 rounded-2xl transition-all active:scale-90 text-white"
+                                title="Cerrar vista previa"
+                                aria-label="Cerrar vista previa"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="p-10">
+                            <div className="bg-slate-50 rounded-3xl border border-slate-200 overflow-hidden shadow-inner mb-8">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                        <thead>
+                                            <tr className="bg-slate-200/50">
+                                                {['Nombre', 'Documento', 'Rol', 'Estado', 'Area ID'].map(h => (
+                                                    <th key={h} className="px-5 py-4 text-slate-500 font-black uppercase tracking-widest border-r border-slate-200 last:border-0 text-left">{h}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr className="bg-white group">
+                                                <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Ejemplo Nombre]</td>
+                                                <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Ejemplo DNI]</td>
+                                                <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Ejemplo Rol]</td>
+                                                <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Activo]</td>
+                                                <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Ejemplo ID]</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <button
+                                    onClick={() => setIsPreviewOpen(false)}
+                                    className="flex-1 px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 hover:text-slate-700 transition-all active:scale-95"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={() => downloadTemplate(previewType)}
+                                    className="flex-[2] px-8 py-4 bg-aquanqa-blue text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-200 hover:bg-aquanqa-dark hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center space-x-3 group"
+                                >
+                                    <FileDown size={20} className="group-hover:bounce" />
+                                    <span>Descargar Excel de {previewType === 'carga' ? 'Carga' : 'Baja'}</span>
                                 </button>
                             </div>
                         </div>

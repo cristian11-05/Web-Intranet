@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Layout } from './Layout';
 import { Suggestion } from '../data/mockData';
 import { Filter, ChevronRight, MessageSquare, AlertTriangle, Loader2 } from 'lucide-react';
@@ -13,11 +13,7 @@ export const SuggestionsList = () => {
     const [filterStatus, setFilterStatus] = useState('Todas');
     const [selectedItem, setSelectedItem] = useState<Suggestion | null>(null);
 
-    useEffect(() => {
-        loadSuggestions();
-    }, []);
-
-    const loadSuggestions = async () => {
+    const loadSuggestions = useCallback(async () => {
         try {
             setLoading(true);
             const data = await suggestionService.getAllSuggestions();
@@ -29,7 +25,21 @@ export const SuggestionsList = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        loadSuggestions();
+    }, [loadSuggestions]);
+
+    const handleUpdate = useCallback(async (id: string, status: string, comment?: string) => {
+        await suggestionService.updateStatus(id, status, comment);
+        // Update local state immediately to reflect the change
+        setSuggestions(prev => prev.map(item =>
+            item.id === id ? { ...item, estado: status as any, comentario_admin: comment } : item
+        ));
+        // Also reload from server to be sure
+        loadSuggestions();
+    }, [loadSuggestions]);
 
     const filtered = suggestions.filter(item => {
         const tipoCS = item.tipo?.toLowerCase() || '';
@@ -52,43 +62,46 @@ export const SuggestionsList = () => {
             </div>
 
             {/* Filters */}
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6 flex items-center space-x-4">
-                <div className="flex items-center space-x-2 text-gray-500">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8 flex flex-wrap items-center gap-4 transition-all hover:shadow-md">
+                <div className="flex items-center space-x-2 text-slate-400">
                     <Filter size={18} />
-                    <span className="font-medium">Filtrar por:</span>
+                    <span className="text-[11px] font-black uppercase tracking-widest">Filtrar por:</span>
                 </div>
 
-                {['Todos', 'Reporte de situación', 'Te escuchamos'].map(type => (
-                    <button
-                        key={type}
-                        onClick={() => setFilterType(type)}
-                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filterType === type
-                            ? 'bg-aquanqa-dark text-white'
-                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                            }`}
-                    >
-                        {type}
-                    </button>
-                ))}
-
-                <div className="w-px h-6 bg-gray-300 mx-2 hidden md:block"></div>
-
-                <div className="flex items-center space-x-2 text-gray-500">
-                    <span className="text-sm font-medium">Estado:</span>
+                <div className="flex flex-wrap items-center gap-3">
+                    {['Todos', 'Reporte de situación', 'Te escuchamos'].map(type => (
+                        <button
+                            key={type}
+                            onClick={() => setFilterType(type)}
+                            className={`px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 active:scale-95 ${filterType === type
+                                ? 'bg-aquanqa-blue text-white shadow-lg shadow-blue-200 ring-2 ring-aquanqa-blue/20'
+                                : 'bg-white border border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                                }`}
+                        >
+                            {type}
+                        </button>
+                    ))}
                 </div>
 
-                {['Todas', 'Pendiente', 'Revisada'].map(status => (
-                    <button
-                        key={status}
-                        onClick={() => setFilterStatus(status)}
-                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filterStatus === status
-                            ? 'bg-aquanqa-dark text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                    >
-                        {status}
-                    </button>
-                ))}
+                <div className="w-px h-6 bg-slate-100 mx-2 hidden md:block"></div>
+
+                <div className="flex items-center space-x-3">
+                    <span className="text-slate-400 text-[11px] font-black uppercase tracking-widest">Estado:</span>
+                    <div className="flex flex-wrap items-center gap-3">
+                        {['Todas', 'Pendiente', 'Revisada'].map(status => (
+                            <button
+                                key={status}
+                                onClick={() => setFilterStatus(status)}
+                                className={`px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 active:scale-95 ${filterStatus === status
+                                    ? 'bg-aquanqa-dark text-white shadow-lg shadow-slate-200 ring-2 ring-slate-200'
+                                    : 'bg-white border border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                                    }`}
+                            >
+                                {status}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* List */}
@@ -157,9 +170,9 @@ export const SuggestionsList = () => {
 
                                 <button
                                     onClick={() => setSelectedItem(item)}
-                                    className="absolute bottom-6 right-6 text-aquanqa-blue hover:text-aquanqa-dark font-medium text-sm flex items-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="absolute bottom-6 right-6 px-4 py-2 bg-aquanqa-blue/5 text-aquanqa-blue hover:bg-aquanqa-blue hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:shadow-lg active:scale-95 translate-y-2 group-hover:translate-y-0"
                                 >
-                                    Ver Detalle <ChevronRight size={16} />
+                                    Ver Detalle <ChevronRight size={14} className="ml-1" />
                                 </button>
                             </div>
                         ))}
@@ -177,15 +190,7 @@ export const SuggestionsList = () => {
                 onClose={() => setSelectedItem(null)}
                 data={selectedItem as any}
                 title={(selectedItem?.tipo?.toLowerCase() || '').includes('reclamo') || (selectedItem?.tipo?.toLowerCase() || '').includes('escuchamos') ? 'Detalle de Te escuchamos' : 'Detalle de Reporte de situación'}
-                onUpdate={async (id, status, comment) => {
-                    await suggestionService.updateStatus(id, status, comment);
-                    // Update local state immediately to reflect the change
-                    setSuggestions(prev => prev.map(item =>
-                        item.id === id ? { ...item, estado: status as any, comentario_admin: comment } : item
-                    ));
-                    // Also reload from server to be sure
-                    loadSuggestions();
-                }}
+                onUpdate={handleUpdate}
             />
         </Layout>
     );

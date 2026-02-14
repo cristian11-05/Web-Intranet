@@ -9,12 +9,12 @@ const SidebarItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: 
     return (
         <Link
             to={to}
-            className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors mb-1 ${isActive
-                ? 'bg-aquanqa-blue text-white font-medium'
-                : 'text-gray-400 hover:bg-slate-800 hover:text-white'
+            className={`flex items-center space-x-3 px-6 py-3.5 rounded-2xl transition-all duration-300 mb-2 group active:scale-95 ${isActive
+                ? 'bg-aquanqa-blue text-white shadow-lg shadow-blue-500/20 font-black text-xs uppercase tracking-widest'
+                : 'text-slate-400 hover:bg-slate-800/50 hover:text-white font-bold text-xs uppercase tracking-widest'
                 }`}
         >
-            <Icon size={20} />
+            <Icon size={20} className={`${isActive ? 'text-white' : 'text-slate-500 group-hover:text-aquanqa-blue'} transition-colors duration-300`} />
             <span>{label}</span>
         </Link>
     );
@@ -63,10 +63,10 @@ export const Layout = ({ children }: { children: ReactNode }) => {
                     <SidebarItem to="/justificaciones" icon={CheckSquare} label="Justificaciones" />
                 </nav>
 
-                <div className="p-4 border-t border-slate-700">
-                    <Link to="/login" className="flex items-center space-x-3 px-4 py-3 w-full text-left text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
-                        <LogOut size={20} />
-                        <span>Cerrar Sesión</span>
+                <div className="p-6 border-t border-slate-800/50">
+                    <Link to="/login" className="flex items-center space-x-3 px-6 py-3.5 w-full text-left text-slate-400 hover:text-rose-400 hover:bg-rose-500/5 rounded-2xl transition-all duration-300 group active:scale-95">
+                        <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+                        <span className="font-black text-xs uppercase tracking-widest">Cerrar Sesión</span>
                     </Link>
                 </div>
             </aside>
@@ -74,15 +74,15 @@ export const Layout = ({ children }: { children: ReactNode }) => {
             {/* Main Content */}
             <main className="flex-1 ml-64 flex flex-col min-h-screen">
                 {/* Header */}
-                <header className="bg-aquanqa-dark text-white shadow-sm h-16 flex items-center justify-between px-8 sticky top-0 z-10 border-b border-slate-700">
-                    <h2 className="text-lg font-medium">Panel de Administración</h2>
-                    <div className="flex items-center space-x-4">
+                <header className="bg-white text-slate-800 shadow-sm h-20 flex items-center justify-between px-10 sticky top-0 z-10 border-b border-slate-100 backdrop-blur-md bg-white/80">
+                    <h2 className="text-xl font-black tracking-tight text-slate-800">Panel de Administración</h2>
+                    <div className="flex items-center space-x-6">
                         <div className="text-right hidden md:block">
-                            <p className="text-sm font-medium">{userName}</p>
-                            <p className="text-xs text-aquanqa-blue">{userRole || 'Recursos Humanos'}</p>
+                            <p className="text-sm font-black text-slate-800 tracking-tight">{userName}</p>
+                            <p className="text-[10px] font-black text-aquanqa-blue uppercase tracking-widest">{userRole || 'Recursos Humanos'}</p>
                         </div>
-                        <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-aquanqa-green">
-                            <User size={20} />
+                        <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center text-aquanqa-blue shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-95">
+                            <User size={24} />
                         </div>
                     </div>
                 </header>
