@@ -6,20 +6,66 @@ import { Loader2, FileDown } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
 
 const StatCard = ({ title, count, subtitle, type }: { title: string; count: number; subtitle: string; type?: 'default' | 'success' | 'warning' | 'danger' }) => {
+    const colorClasses = {
+        success: {
+            bg: 'bg-emerald-500/10',
+            text: 'text-emerald-500',
+            border: 'border-emerald-500/20',
+            shadow: 'shadow-emerald-200/40',
+            dot: 'bg-emerald-500'
+        },
+        warning: {
+            bg: 'bg-amber-500/10',
+            text: 'text-amber-500',
+            border: 'border-amber-500/20',
+            shadow: 'shadow-amber-200/40',
+            dot: 'bg-amber-500'
+        },
+        danger: {
+            bg: 'bg-rose-500/10',
+            text: 'text-rose-500',
+            border: 'border-rose-500/20',
+            shadow: 'shadow-rose-200/40',
+            dot: 'bg-rose-500'
+        },
+        default: {
+            bg: 'bg-blue-500/10',
+            text: 'text-blue-500',
+            border: 'border-blue-500/20',
+            shadow: 'shadow-blue-200/40',
+            dot: 'bg-blue-500'
+        }
+    };
+
+    const colors = colorClasses[type || 'default'];
+
     return (
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
-            <div className={`absolute top-0 left-0 w-2 h-full ${type === 'success' ? 'bg-aquanqa-green' : type === 'warning' ? 'bg-amber-400' : type === 'danger' ? 'bg-rose-500' : 'bg-aquanqa-blue'}`}></div>
-            <div className="flex flex-col items-center relative z-10">
-                <span className={`text-5xl font-black mb-3 tracking-tighter ${type === 'success' ? 'text-aquanqa-green' :
-                    type === 'warning' ? 'text-amber-500' :
-                        type === 'danger' ? 'text-rose-500' : 'text-slate-800'
-                    }`}>
+        <div className={`relative group bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/30 hover:shadow-2xl hoverShadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-2 transition-all duration-500 overflow-hidden`}>
+            {/* Background Accent */}
+            <div className={`absolute top-0 right-0 w-32 h-32 ${colors.bg} rounded-full -mr-16 -mt-16 blur-3xl opacity-50 group-hover:scale-150 transition-transform duration-700`}></div>
+
+            <div className="relative z-10 flex flex-col items-center">
+                <div className={`flex items-center space-x-2 mb-4 px-4 py-1.5 rounded-full ${colors.bg} ${colors.border} border ring-4 ring-white shadow-sm`}>
+                    <div className={`w-2 h-2 rounded-full ${colors.dot} animate-pulse`}></div>
+                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${colors.text}`}>{title}</span>
+                </div>
+
+                <span className={`text-6xl font-black mb-1 tracking-tighter ${type === 'danger' ? 'text-rose-500' : type === 'success' ? 'text-emerald-500' : type === 'warning' ? 'text-amber-500' : 'text-slate-900'} font-mono tabular-nums group-hover:scale-110 transition-transform duration-500`}>
                     {count}
                 </span>
-                <h3 className="text-slate-800 font-extrabold text-sm mb-1 uppercase tracking-widest">{title}</h3>
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{subtitle}</p>
+
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2 opacity-70 group-hover:opacity-100 transition-opacity">
+                    {subtitle}
+                </p>
+
+                {/* Decorative Data Indicator */}
+                <div className="w-full h-1.5 bg-slate-50 rounded-full mt-6 overflow-hidden border border-slate-100 shadow-inner">
+                    <div className={`h-full ${colors.dot} rounded-full opacity-60 group-hover:opacity-100 transition-all duration-700 w-3/4 shadow-[0_0_10px_rgba(0,0,0,0.1)] group-hover:w-[85%]`}></div>
+                </div>
             </div>
-            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-slate-50 rounded-full group-hover:scale-150 transition-transform duration-500 -z-0 opacity-50"></div>
+
+            {/* Bottom Glow */}
+            <div className={`absolute -bottom-2 lg:-bottom-6 left-1/2 -translate-x-1/2 w-1/2 h-4 ${colors.bg} blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
         </div>
     );
 };
@@ -315,51 +361,72 @@ export const Dashboard = () => {
         <Layout>
             <div className="space-y-8 animate-in fade-in duration-700">
                 {/* Header Global del Dashboard con Botón de Descarga Único */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/50 p-6 rounded-[2rem] border border-slate-100 shadow-sm mb-8">
-                    <div>
-                        <h2 className="text-3xl font-black text-slate-800 tracking-tight">Panel Informativo</h2>
-                        <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Resumen general de gestión</p>
+                <div className="relative overflow-hidden bg-white p-10 rounded-[3rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-100 mb-12">
+                    {/* Abstract Shapes for Premium Background */}
+                    <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-br from-aquanqa-blue/5 to-transparent rounded-full -mr-32 -mt-32 blur-3xl -z-10"></div>
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-50 rounded-full -ml-20 -mb-20 blur-3xl opacity-30 -z-10"></div>
+
+                    <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                        <div className="flex items-center space-x-6">
+                            <div className="w-1.5 h-16 bg-gradient-to-b from-aquanqa-blue to-blue-600 rounded-full"></div>
+                            <div>
+                                <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-3">Panel Informativo</h2>
+                                <div className="flex items-center space-x-3">
+                                    <span className="w-2 h-2 bg-aquanqa-green rounded-full animate-pulse"></span>
+                                    <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em]">Resumen general de gestión estratégica</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={exportToExcel}
+                            disabled={exporting}
+                            className={`group relative overflow-hidden bg-aquanqa-blue text-white hover:bg-aquanqa-dark hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-200/60 transition-all active:scale-95 font-black px-10 py-5 rounded-[2rem] text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-blue-100/50 flex items-center justify-center space-x-4 disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                            {exporting ? (
+                                <>
+                                    <Loader2 className="animate-spin" size={20} />
+                                    <span>Generando Reporte Estratégico...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="p-2 bg-white/10 rounded-xl group-hover:scale-110 transition-transform">
+                                        <FileDown size={22} strokeWidth={2.5} />
+                                    </div>
+                                    <div className="flex flex-col items-start leading-tight">
+                                        <span className="text-[12px]">Descargar Reporte Master</span>
+                                        <span className="text-[9px] opacity-60 font-bold">FORMATO EXCEL PROFESIONAL</span>
+                                    </div>
+                                </>
+                            )}
+                        </button>
                     </div>
-                    <button
-                        onClick={exportToExcel}
-                        disabled={exporting}
-                        className="w-full sm:w-auto bg-aquanqa-green text-white hover:bg-emerald-600 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-green-200/50 transition-all active:scale-95 font-black px-8 py-3.5 rounded-2xl text-[11px] uppercase tracking-widest shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-white"
-                    >
-                        {exporting ? (
-                            <>
-                                <Loader2 className="animate-spin" size={18} />
-                                <span>Generando Reporte...</span>
-                            </>
-                        ) : (
-                            <>
-                                <FileDown size={18} />
-                                <span>Descargar Reporte Completo Excel</span>
-                            </>
-                        )}
-                    </button>
                 </div>
 
                 {/* Sección Justificaciones */}
-                <div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div className="mb-16">
+                    <div className="flex items-center space-x-4 mb-10">
+                        <div className="w-10 h-1 bg-slate-200 rounded-full"></div>
                         <h2 className="text-2xl font-black text-slate-800 tracking-tight">Resumen de Justificaciones</h2>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <StatCard count={stats.totalJustif} title="Total" subtitle="Total de Justificaciones" />
-                        <StatCard count={stats.aprobadas} title="Aprobadas" subtitle="Solicitudes aprobadas" type="success" />
-                        <StatCard count={stats.pendientes} title="Pendientes" subtitle="Por revisar" type="warning" />
-                        <StatCard count={stats.rechazadas} title="Rechazadas" subtitle="Solicitudes rechazadas" type="danger" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <StatCard count={stats.totalJustif} title="TOTAL" subtitle="TOTAL DE JUSTIFICACIONES" />
+                        <StatCard count={stats.aprobadas} title="APROBADAS" subtitle="SOLICITUDES APROBADAS" type="success" />
+                        <StatCard count={stats.pendientes} title="PENDIENTES" subtitle="POR REVISAR" type="warning" />
+                        <StatCard count={stats.rechazadas} title="RECHAZADAS" subtitle="SOLICITUDES RECHAZADAS" type="danger" />
                     </div>
                 </div>
 
                 <div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center space-x-4 mb-10">
+                        <div className="w-10 h-1 bg-slate-200 rounded-full"></div>
                         <h2 className="text-2xl font-black text-slate-800 tracking-tight">Reportes y Consultas</h2>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <StatCard count={stats.totalSugerencias} title="Total General" subtitle="Reportes + Consultas" />
-                        <StatCard count={stats.sugerencias} title="Reporte de situación" subtitle="Ideas y propuestas" type="success" />
-                        <StatCard count={stats.reclamos} title="Te escuchamos" subtitle="Reportes de problemas" type="danger" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <StatCard count={stats.totalSugerencias} title="CONSOLIDADO" subtitle="REPORTES + CONSULTAS" />
+                        <StatCard count={stats.sugerencias} title="SITUACIÓN" subtitle="IDEAS Y PROPUESTAS" type="success" />
+                        <StatCard count={stats.reclamos} title="INCIDENCIAS" subtitle="REPORTES DE PROBLEMAS" type="danger" />
                     </div>
                 </div>
             </div>
