@@ -280,39 +280,50 @@ export const UserMaster = () => {
 
     return (
         <Layout>
-            <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="mb-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                 <div>
-                    <div className="flex items-center space-x-2 mb-1">
-                        <UserCircle className="text-aquanqa-blue" size={28} />
-                        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Maestro de Usuarios</h1>
+                    <div className="flex items-center space-x-3 mb-2">
+                        <div className="p-3 bg-blue-50 text-aquanqa-blue rounded-2xl shadow-sm border border-blue-100">
+                            <UserCircle size={32} strokeWidth={2.5} />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Maestro de Usuarios</h1>
+                            <p className="text-slate-400 font-medium text-sm tracking-tight">Gestiona el personal y permisos del sistema RRHH</p>
+                        </div>
                     </div>
-                    <p className="text-slate-500 font-medium tracking-tight">Gestiona el personal y permisos del sistema RRHH</p>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                    <div className="flex flex-col">
-                        <input type="file" accept=".xlsx,.xls" onChange={handleBulkUpload} className="hidden" id="bulk-upload" />
-                        <label htmlFor="bulk-upload" className="flex items-center space-x-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-slate-700 hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 font-black shadow-sm text-xs cursor-pointer uppercase tracking-widest">
-                            <UploadCloud size={18} className="text-aquanqa-blue" />
-                            <span>Carga Masiva</span>
-                        </label>
-                        <button onClick={() => { setPreviewType('carga'); setIsPreviewOpen(true); }} className="text-[9px] text-aquanqa-blue font-black uppercase tracking-widest hover:underline mt-1.5 text-center opacity-70 hover:opacity-100 transition-opacity">
-                            Descargar Formato
-                        </button>
+
+                <div className="flex flex-wrap items-center gap-5">
+                    {/* ACCIONES MASIVAS */}
+                    <div className="flex items-center gap-3">
+                        <div className="flex flex-col group">
+                            <input type="file" accept=".xlsx,.xls" onChange={handleBulkUpload} className="hidden" id="bulk-upload" />
+                            <label htmlFor="bulk-upload" className="flex items-center space-x-2 px-6 py-4 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:border-aquanqa-blue hover:text-aquanqa-blue hover:shadow-xl hover:shadow-blue-100/50 hover:-translate-y-1 transition-all active:scale-95 font-black text-[10px] cursor-pointer uppercase tracking-widest shadow-sm">
+                                <UploadCloud size={18} />
+                                <span>Carga Masiva</span>
+                            </label>
+                            <button onClick={() => { setPreviewType('carga'); setIsPreviewOpen(true); }} className="text-[9px] text-slate-400 font-bold uppercase tracking-widest hover:text-aquanqa-blue mt-2 text-center transition-colors">
+                                Formato Carga
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col group">
+                            <input type="file" accept=".xlsx,.xls" onChange={handleBulkDelete} className="hidden" id="bulk-delete" />
+                            <label htmlFor="bulk-delete" className="flex items-center space-x-2 px-6 py-4 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:border-rose-500 hover:text-rose-600 hover:shadow-xl hover:shadow-rose-100/50 hover:-translate-y-1 transition-all active:scale-95 font-black text-[10px] cursor-pointer uppercase tracking-widest shadow-sm">
+                                <Trash size={18} />
+                                <span>Baja Masiva</span>
+                            </label>
+                            <button onClick={() => { setPreviewType('baja'); setIsPreviewOpen(true); }} className="text-[9px] text-slate-400 font-bold uppercase tracking-widest hover:text-rose-600 mt-2 text-center transition-colors">
+                                Formato Baja
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="flex flex-col">
-                        <input type="file" accept=".xlsx,.xls" onChange={handleBulkDelete} className="hidden" id="bulk-delete" />
-                        <label htmlFor="bulk-delete" className="flex items-center space-x-2 px-6 py-3 bg-white border border-rose-100 rounded-2xl text-rose-600 hover:bg-rose-50 hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 font-black shadow-sm text-xs cursor-pointer uppercase tracking-widest">
-                            <Trash size={18} className="text-rose-500" />
-                            <span>Baja Masiva</span>
-                        </label>
-                        <button onClick={() => { setPreviewType('baja'); setIsPreviewOpen(true); }} className="text-[9px] text-rose-500 font-black uppercase tracking-widest hover:underline mt-1.5 text-center opacity-70 hover:opacity-100 transition-opacity">
-                            Descargar Formato
-                        </button>
-                    </div>
+                    <div className="w-px h-12 bg-slate-100 mx-2 hidden lg:block"></div>
+
                     <button
                         onClick={() => { setSelectedUser(null); setIsModalOpen(true); }}
-                        className="flex items-center space-x-3 px-8 py-3 bg-aquanqa-blue text-white rounded-2xl hover:bg-aquanqa-dark hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-200/50 transition-all active:scale-95 font-black text-xs uppercase tracking-[0.1em]"
+                        className="flex items-center space-x-3 px-8 py-4 bg-aquanqa-blue text-white rounded-2xl hover:bg-aquanqa-dark hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-200/60 transition-all active:scale-95 font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-blue-100/50"
                     >
                         <UserPlus size={20} />
                         <span>Nuevo Trabajador</span>
@@ -320,47 +331,50 @@ export const UserMaster = () => {
                 </div>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-8 transition-all hover:shadow-md">
-                <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Filtros de Trabajadores</h3>
+            <div className="bg-white p-10 rounded-[3rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] border border-slate-100 mb-12 transition-all hover:shadow-[0_25px_60px_-12px_rgba(0,0,0,0.08)]">
+                <div className="flex items-center justify-between mb-10">
+                    <div className="flex items-center space-x-3">
+                        <div className="w-1.5 h-6 bg-aquanqa-blue rounded-full"></div>
+                        <h3 className="text-xs font-black text-slate-800 uppercase tracking-[0.2em]">Filtros Avanzados</h3>
+                    </div>
                     <button
                         type="button"
                         onClick={() => { setFilterDoc(''); setFilterName(''); setFilterCompany(''); setSearchTerm(''); }}
-                        className="text-xs text-aquanqa-blue hover:text-aquanqa-dark transition-colors font-black uppercase tracking-wider"
+                        className="text-[10px] text-slate-400 hover:text-aquanqa-blue transition-all font-black uppercase tracking-widest px-4 py-2 hover:bg-slate-50 rounded-xl"
                     >
                         Limpiar Filtros
                     </button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                     <div className="group">
-                        <label htmlFor="filterDoc" className="text-[10px] font-black text-slate-400 mb-1 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest">Listado de Nro. de Documento</label>
+                        <label htmlFor="filterDoc" className="text-[10px] font-black text-slate-400 mb-2 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest opacity-70">Número de Documento</label>
                         <input
                             id="filterDoc"
                             type="text"
-                            placeholder="Filtro nro de documento"
+                            placeholder="Buscar por DNI..."
                             value={filterDoc}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterDoc(e.target.value)}
-                            className="w-full border-b-2 border-slate-100 py-3 focus:border-aquanqa-blue outline-none text-sm font-bold transition-all placeholder:font-medium placeholder:text-slate-200"
+                            className="w-full border-b border-slate-100 py-3 focus:border-aquanqa-blue outline-none text-sm font-bold transition-all placeholder:font-medium placeholder:text-slate-200 bg-transparent"
                         />
                     </div>
                     <div className="group">
-                        <label htmlFor="filterName" className="text-[10px] font-black text-slate-400 mb-1 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest">Nombre Trabajador</label>
+                        <label htmlFor="filterName" className="text-[10px] font-black text-slate-400 mb-2 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest opacity-70">Nombre del Colaborador</label>
                         <input
                             id="filterName"
                             type="text"
-                            placeholder="Filtro nombre de trabajador"
+                            placeholder="Buscar por nombre..."
                             value={filterName}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterName(e.target.value)}
-                            className="w-full border-b-2 border-slate-100 py-3 focus:border-aquanqa-blue outline-none text-sm font-bold transition-all placeholder:font-medium placeholder:text-slate-200"
+                            className="w-full border-b border-slate-100 py-3 focus:border-aquanqa-blue outline-none text-sm font-bold transition-all placeholder:font-medium placeholder:text-slate-200 bg-transparent"
                         />
                     </div>
                     <div className="group">
-                        <label htmlFor="filterCompany" className="text-[10px] font-black text-slate-400 mb-1 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest">Filtrar por Empresa</label>
+                        <label htmlFor="filterCompany" className="text-[10px] font-black text-slate-400 mb-2 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest opacity-70">Empresa / Sede</label>
                         <select
                             id="filterCompany"
                             value={filterCompany}
                             onChange={(e) => setFilterCompany(e.target.value)}
-                            className="w-full border-b-2 border-slate-100 py-3 focus:border-aquanqa-blue outline-none text-sm font-bold transition-all bg-transparent"
+                            className="w-full border-b border-slate-100 py-3 focus:border-aquanqa-blue outline-none text-sm font-bold transition-all bg-transparent appearance-none"
                         >
                             <option value="">Todas las Empresas</option>
                             <option value="Aquanqa 1">Aquanqa 1</option>
@@ -381,10 +395,10 @@ export const UserMaster = () => {
                             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
                             <input
                                 type="text"
-                                placeholder="Búsqueda rápida..."
+                                placeholder="Búsqueda rápida por nombre o DNI..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-sm w-full focus:ring-8 focus:ring-aquanqa-blue/5 focus:border-aquanqa-blue outline-none transition-all shadow-inner font-medium"
+                                className="pl-14 pr-6 py-4 bg-white border border-slate-200/60 rounded-2xl text-sm w-full focus:ring-4 focus:ring-aquanqa-blue/5 focus:border-aquanqa-blue outline-none transition-all shadow-sm font-medium placeholder:text-slate-300"
                             />
                         </div>
                         <button className="flex items-center justify-center space-x-3 px-8 py-4 bg-aquanqa-green text-white rounded-2xl hover:bg-emerald-600 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-green-200/50 transition-all active:scale-95 font-black text-xs uppercase tracking-widest">
@@ -407,85 +421,124 @@ export const UserMaster = () => {
                         </div>
                     ) : (
                         <table className="w-full text-left text-sm border-collapse">
-                            <thead className="bg-slate-50/30 text-slate-400 font-black uppercase text-[10px] tracking-[0.2em] border-b border-slate-50">
+                            <thead className="bg-slate-50/50 border-y border-slate-100/80">
                                 <tr>
-                                    <th className="px-10 py-6 w-20 text-center">#</th>
-                                    <th className="px-6 py-6">Documentación</th>
-                                    <th className="px-6 py-6">Colaborador</th>
-                                    <th className="px-6 py-6">Área</th>
-                                    <th className="px-6 py-6">Empresa</th>
-                                    <th className="px-6 py-6">Contrato</th>
-                                    <th className="px-6 py-6">Registro</th>
-                                    <th className="px-6 py-6 text-center">Estado</th>
-                                    <th className="px-10 py-6 text-right w-40">Acciones</th>
+                                    <th className="px-10 py-5 w-20 text-center font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">#</th>
+                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Documento</th>
+                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Colaborador</th>
+                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Área</th>
+                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Empresa</th>
+                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Contrato</th>
+                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Registro</th>
+                                    <th className="px-6 py-5 text-center font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Estado</th>
+                                    <th className="px-10 py-5 text-right font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] w-40">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
                                 {filteredUsers.map((user, index) => (
-                                    <tr key={user.id} className="group hover:bg-blue-50/20 transition-all duration-300">
-                                        <td className="px-10 py-7 text-center text-slate-300 font-black text-xs group-hover:text-aquanqa-blue transition-colors">{String(index + 1).padStart(2, '0')}</td>
-                                        <td className="px-6 py-7">
+                                    <tr key={user.id} className="group hover:bg-slate-50/50 transition-all duration-300">
+                                        <td className="px-10 py-8 text-center text-slate-300 font-mono text-xs group-hover:text-aquanqa-blue transition-colors">{String(index + 1).padStart(2, '0')}</td>
+
+                                        {/* DOCUMENTACIÓN */}
+                                        <td className="px-6 py-8">
                                             <div className="flex flex-col">
-                                                <span className="font-black text-slate-700 font-mono text-base tracking-tighter">{user.documento || '---'}</span>
-                                                <span className="text-[9px] text-slate-300 font-black uppercase tracking-widest mt-1">DNI PERÚ</span>
+                                                <span className="font-bold text-slate-900 font-mono text-sm tracking-tight">{user.documento || '---'}</span>
+                                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.1em] mt-1">DNI / DOCUMENTO</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-7">
+
+                                        {/* COLABORADOR */}
+                                        <td className="px-6 py-8">
                                             <div className="flex items-center">
-                                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center mr-5 text-slate-400 font-black text-sm border-2 border-white shadow-sm ring-1 ring-slate-100 group-hover:ring-aquanqa-blue/20 transition-all">
+                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center mr-4 text-slate-400 font-black text-xs border border-slate-200/50 shadow-sm group-hover:from-aquanqa-blue group-hover:to-blue-600 group-hover:text-white transition-all duration-300">
                                                     {user.nombre?.charAt(0) || 'U'}
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <span className="font-extrabold text-slate-900 text-lg tracking-tight leading-tight group-hover:text-aquanqa-blue transition-colors">{user.nombre}</span>
-                                                    <span className="text-xs text-slate-400 font-bold mt-0.5">{user.email}</span>
+                                                    <span className="font-bold text-slate-800 text-sm tracking-tight group-hover:text-aquanqa-blue transition-colors">{user.nombre}</span>
+                                                    <span className="text-[11px] text-slate-400 font-medium">{user.email || 'sin correo registrado'}</span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-7">
+
+                                        {/* ÁREA */}
+                                        <td className="px-6 py-8">
                                             <div className="flex flex-col">
-                                                <span className="font-bold text-slate-700 text-sm">{user.area_nombre || 'Sin área'}</span>
-                                                <span className="text-[10px] text-slate-300 font-black uppercase tracking-widest mt-0.5">ÁREA ASIGNADA</span>
+                                                <span className="font-bold text-slate-700 text-xs">{user.area_nombre || 'Sin área'}</span>
+                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5 opacity-60">ÁREA</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-7">
-                                            <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${user.empresa === 'Aquanqa 1' ? 'bg-blue-50 text-blue-600 ring-1 ring-blue-100' : 'bg-green-50 text-green-600 ring-1 ring-green-100'}`}>
-                                                {user.empresa || '---'}
-                                            </span>
+
+                                        {/* EMPRESA */}
+                                        <td className="px-6 py-8">
+                                            <div className="flex">
+                                                <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-[0.05em] min-w-[100px] text-center shadow-sm border ${user.empresa === 'Aquanqa 1'
+                                                    ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                                    : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                                    }`}>
+                                                    {user.empresa || '---'}
+                                                </span>
+                                            </div>
                                         </td>
-                                        <td className="px-6 py-7">
-                                            <span className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-                                                {user.rol === 'obrero' ? 'Obrero' : user.rol === 'trabajador' ? 'Trabajador' : user.rol === 'empleado' ? 'Empleado' : 'Administrador'}
-                                            </span>
+
+                                        {/* CONTRATO / ROL */}
+                                        <td className="px-6 py-8">
+                                            <div className="flex">
+                                                <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-[0.05em] min-w-[110px] text-center border shadow-sm ${user.rol === 'administrador' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' :
+                                                    user.rol === 'empleado' ? 'bg-sky-50 text-sky-700 border-sky-100' :
+                                                        user.rol === 'trabajador' ? 'bg-slate-50 text-slate-700 border-slate-200' :
+                                                            'bg-orange-50 text-orange-700 border-orange-100'
+                                                    }`}>
+                                                    {user.rol === 'obrero' ? 'Obrero' : user.rol === 'trabajador' ? 'Trabajador' : user.rol === 'empleado' ? 'Empleado' : 'Administrador'}
+                                                </span>
+                                            </div>
                                         </td>
-                                        <td className="px-6 py-7">
+
+                                        {/* REGISTRO */}
+                                        <td className="px-6 py-8">
                                             <div className="flex flex-col">
                                                 <span className="text-slate-600 font-bold text-sm tracking-tight">
-                                                    {user.fecha_registro ? new Date(user.fecha_registro).toLocaleString('es-PE', {
+                                                    {user.fecha_registro ? new Date(user.fecha_registro).toLocaleDateString('es-PE', {
                                                         day: '2-digit',
                                                         month: '2-digit',
-                                                        year: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
+                                                        year: 'numeric'
                                                     }) : '---'}
                                                 </span>
-                                                <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest mt-0.5">ALTA SISTEMA</span>
+                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 opacity-60">FECHA ALTA</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-7 text-center">
-                                            <span className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] shadow-sm transform transition-all group-hover:scale-105 ${user.estado === 'Activo' ? 'bg-aquanqa-green/10 text-aquanqa-green ring-2 ring-aquanqa-green/10' :
-                                                user.estado === 'Inactivo' ? 'bg-rose-50 text-rose-500 ring-2 ring-rose-100' :
-                                                    'bg-slate-100 text-slate-400 ring-2 ring-slate-200'
-                                                }`}>
-                                                {user.estado === 'Activo' ? 'Activo' : user.estado === 'Inactivo' ? 'Inactivo' : 'S. Contrato'}
-                                            </span>
+
+                                        {/* ESTADO */}
+                                        <td className="px-6 py-8">
+                                            <div className="flex justify-center">
+                                                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest w-24 text-center border ${user.estado === 'Activo' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                    user.estado === 'Inactivo' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                                        'bg-slate-50 text-slate-400 border-slate-200 opacity-60'
+                                                    }`}>
+                                                    {user.estado}
+                                                </span>
+                                            </div>
                                         </td>
-                                        <td className="px-10 py-7 text-right">
+
+                                        {/* ACCIONES */}
+                                        <td className="px-10 py-8">
                                             <div className="flex items-center justify-end space-x-2">
-                                                <button onClick={() => openEdit(user)} className="p-3 text-slate-300 hover:text-aquanqa-blue hover:bg-white hover:shadow-xl hover:border-slate-100 rounded-2xl transition-all border border-transparent active:scale-90" title="Editar Trabajador">
-                                                    <Edit2 size={20} />
+                                                <button
+                                                    onClick={() => { setSelectedUser(user); setIsModalOpen(true); }}
+                                                    className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-aquanqa-blue hover:text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-200 transition-all duration-200 group/btn"
+                                                    title="Editar trabajador"
+                                                >
+                                                    <Edit2 size={16} />
                                                 </button>
-                                                <button onClick={() => handleDelete(user.id)} className="p-3 text-slate-300 hover:text-rose-500 hover:bg-white hover:shadow-xl hover:border-slate-100 rounded-2xl transition-all border border-transparent active:scale-90" title="Eliminar Trabajador">
-                                                    <Trash2 size={20} />
+                                                <button
+                                                    onClick={() => {
+                                                        if (window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
+                                                            userService.deleteUser(user.id).then(() => loadUsers());
+                                                        }
+                                                    }}
+                                                    className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-rose-500 hover:text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-rose-200 transition-all duration-200 group/btn"
+                                                    title="Eliminar trabajador"
+                                                >
+                                                    <Trash2 size={16} />
                                                 </button>
                                             </div>
                                         </td>
@@ -496,10 +549,13 @@ export const UserMaster = () => {
                     )}
                 </div>
 
-                <div className="p-8 bg-slate-50/50 border-t border-slate-50 flex flex-col md:flex-row items-center justify-between text-slate-400 text-[10px] font-black uppercase tracking-widest gap-4">
-                    <p className="flex items-center">
-                        <span className="w-2 h-2 rounded-full bg-aquanqa-blue animate-pulse mr-2"></span>
+                <div className="p-10 bg-slate-50/30 border-t border-slate-50 flex flex-col md:flex-row items-center justify-between text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] gap-4">
+                    <p className="flex items-center bg-white px-5 py-2.5 rounded-full border border-slate-100 shadow-sm">
+                        <span className="w-1.5 h-1.5 rounded-full bg-aquanqa-blue animate-pulse mr-3"></span>
                         Visualizando {filteredUsers.length} registros • Base completa: {users.length}
+                    </p>
+                    <p className="flex items-center opacity-60">
+                        Última actualización: {new Date().toLocaleTimeString()}
                     </p>
                 </div>
             </div>
