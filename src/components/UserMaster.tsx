@@ -22,6 +22,7 @@ export const UserMaster = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDoc, setFilterDoc] = useState('');
     const [filterName, setFilterName] = useState('');
+    const [filterCompany, setFilterCompany] = useState<string>('');
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -52,18 +53,29 @@ export const UserMaster = () => {
         }
     };
 
-    // Búsqueda Global + Filtros Específicos
-    const filteredUsers = users.filter(user => {
-        const globalSearch = searchTerm.toLowerCase();
-        const matchesGlobal = (user.nombre?.toLowerCase().includes(globalSearch)) ||
-            (user.documento && user.documento.includes(globalSearch)) ||
-            (user.email?.toLowerCase().includes(globalSearch));
+    // Búsqueda Global + Filtros Específicos + Ordenamiento
+    const filteredUsers = users
+        .filter(user => {
+            const globalSearch = searchTerm.toLowerCase();
+            const matchesGlobal = (user.nombre?.toLowerCase().includes(globalSearch)) ||
+                (user.documento && user.documento.includes(globalSearch)) ||
+                (user.email?.toLowerCase().includes(globalSearch));
 
-        const matchesDoc = !filterDoc || (user.documento && user.documento.includes(filterDoc));
-        const matchesName = !filterName || (user.nombre && user.nombre.toLowerCase().includes(filterName.toLowerCase()));
+            const matchesDoc = !filterDoc || (user.documento && user.documento.includes(filterDoc));
+            const matchesName = !filterName || (user.nombre && user.nombre.toLowerCase().includes(filterName.toLowerCase()));
+            const matchesCompany = !filterCompany || user.empresa === filterCompany;
 
-        return matchesGlobal && matchesDoc && matchesName;
-    });
+            return matchesGlobal && matchesDoc && matchesName && matchesCompany;
+        })
+        .sort((a, b) => {
+            // Primero ordenar por estado: Activo > Inactivo > SIN CONTRATO
+            const estadoOrder = { 'Activo': 0, 'Inactivo': 1, 'SIN CONTRATO': 2 };
+            const estadoDiff = estadoOrder[a.estado] - estadoOrder[b.estado];
+            if (estadoDiff !== 0) return estadoDiff;
+
+            // Luego ordenar alfabéticamente por nombre
+            return (a.nombre || '').localeCompare(b.nombre || '', 'es');
+        });
 
     const handleSave = async (userData: Partial<User>) => {
         try {
@@ -108,22 +120,83 @@ export const UserMaster = () => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        try {
-            setLoading(true);
-            const result = await userService.importUsers(file);
-            alert(`Carga completada: ${result.success} procesados exitosamente.`);
-            if (result.errors && result.errors.length > 0) {
-                console.warn('Errores en importación:', result.errors);
-                alert(`Hubo errores en ${result.errors.length} filas. Revisa la consola.`);
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                setLoading(true);
+                const binaryStr = event.target?.result;
+                const workbook = XLSX.read(binaryStr, { type: 'binary' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json<any>(sheet);
+
+                if (rows.length === 0) {
+                    alert('El archivo está vacío');
+                    return;
+                }
+
+                let successCount = 0;
+                let errorCount = 0;
+
+                for (const row of rows) {
+                    try {
+                        // Mapeo flexible de cabeceras
+                        const headerMap: Record<string, string> = {};
+                        Object.keys(row).forEach(key => {
+                            headerMap[normalizeHeader(key)] = key;
+                        });
+
+                        const nameKey = headerMap['nombre'] || headerMap['colaborador'] || headerMap['nombre_completo'];
+                        const docKey = headerMap['documento'] || headerMap['dni'] || headerMap['nro_documento'];
+                        const rolKey = headerMap['rol'] || headerMap['contrato'] || headerMap['tipo_contrato'];
+                        const areaKey = headerMap['area'] || headerMap['area_id'] || headerMap['id_area'] || headerMap['departamento'];
+                        const empresaKey = headerMap['empresa'];
+
+                        if (!row[nameKey] || !row[docKey]) {
+                            console.warn('Fila omitida por falta de nombre o documento:', row);
+                            errorCount++;
+                            continue;
+                        }
+
+                        // Mapear área por nombre a ID
+                        const areaValue = row[areaKey]?.toString().toLowerCase().trim() || '';
+                        let areaId = '1'; // Default: Remuneraciones
+
+                        if (areaValue.includes('bienestar')) areaId = '2';
+                        else if (areaValue.includes('adp')) areaId = '3';
+                        else if (areaValue.includes('transporte')) areaId = '4';
+                        else if (areaValue.includes('remunera')) areaId = '1';
+                        // if numeric, use as is
+                        else if (/^\d+$/.test(areaValue)) areaId = areaValue;
+
+                        // Mapear rol a formato backend (obrero, trabajador, empleado, administrador)
+                        let rol = (row[rolKey]?.toString().toLowerCase() || 'obrero');
+                        if (rol.includes('admin')) rol = 'administrador';
+
+                        await userService.createUser({
+                            nombre: row[nameKey]?.toString(),
+                            documento: row[docKey]?.toString(),
+                            rol: rol as any,
+                            estado: 'Activo',
+                            area_id: areaId,
+                            empresa: row[empresaKey]?.toString() as any || 'Aquanqa 1'
+                        });
+                        successCount++;
+                    } catch (err) {
+                        console.error('Error procesando fila:', row, err);
+                        errorCount++;
+                    }
+                }
+
+                alert(`Proceso completado.\nÉxito: ${successCount}\nErrores: ${errorCount}`);
+                loadUsers();
+            } catch (err: any) {
+                alert('Error al leer el archivo Excel: ' + err.message);
+            } finally {
+                setLoading(false);
+                if (e.target) e.target.value = '';
             }
-            loadUsers();
-        } catch (err: any) {
-            console.error('Error in bulk upload:', err);
-            alert('Error al procesar la carga masiva: ' + err.message);
-        } finally {
-            setLoading(false);
-            e.target.value = '';
-        }
+        };
+        reader.readAsBinaryString(file);
     };
 
     const handleBulkDelete = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,7 +267,9 @@ export const UserMaster = () => {
     };
 
     const downloadTemplate = (type: 'carga' | 'baja') => {
-        const headers = [['Nombre', 'Documento', 'Rol', 'Estado', 'Area ID']];
+        const headers = type === 'carga'
+            ? [['Nombre', 'Documento', 'Rol', 'Area', 'Empresa']]
+            : [['Documento']];
 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(headers);
@@ -250,7 +325,7 @@ export const UserMaster = () => {
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Filtros de Trabajadores</h3>
                     <button
                         type="button"
-                        onClick={() => { setFilterDoc(''); setFilterName(''); setSearchTerm(''); }}
+                        onClick={() => { setFilterDoc(''); setFilterName(''); setFilterCompany(''); setSearchTerm(''); }}
                         className="text-xs text-aquanqa-blue hover:text-aquanqa-dark transition-colors font-black uppercase tracking-wider"
                     >
                         Limpiar Filtros
@@ -278,6 +353,19 @@ export const UserMaster = () => {
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilterName(e.target.value)}
                             className="w-full border-b-2 border-slate-100 py-3 focus:border-aquanqa-blue outline-none text-sm font-bold transition-all placeholder:font-medium placeholder:text-slate-200"
                         />
+                    </div>
+                    <div className="group">
+                        <label htmlFor="filterCompany" className="text-[10px] font-black text-slate-400 mb-1 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest">Filtrar por Empresa</label>
+                        <select
+                            id="filterCompany"
+                            value={filterCompany}
+                            onChange={(e) => setFilterCompany(e.target.value)}
+                            className="w-full border-b-2 border-slate-100 py-3 focus:border-aquanqa-blue outline-none text-sm font-bold transition-all bg-transparent"
+                        >
+                            <option value="">Todas las Empresas</option>
+                            <option value="Aquanqa 1">Aquanqa 1</option>
+                            <option value="Aquanqa 2">Aquanqa 2</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -324,6 +412,9 @@ export const UserMaster = () => {
                                     <th className="px-10 py-6 w-20 text-center">#</th>
                                     <th className="px-6 py-6">Documentación</th>
                                     <th className="px-6 py-6">Colaborador</th>
+                                    <th className="px-6 py-6">Área</th>
+                                    <th className="px-6 py-6">Empresa</th>
+                                    <th className="px-6 py-6">Contrato</th>
                                     <th className="px-6 py-6">Registro</th>
                                     <th className="px-6 py-6 text-center">Estado</th>
                                     <th className="px-10 py-6 text-right w-40">Acciones</th>
@@ -349,6 +440,22 @@ export const UserMaster = () => {
                                                     <span className="text-xs text-slate-400 font-bold mt-0.5">{user.email}</span>
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td className="px-6 py-7">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-slate-700 text-sm">{user.area_nombre || 'Sin área'}</span>
+                                                <span className="text-[10px] text-slate-300 font-black uppercase tracking-widest mt-0.5">ÁREA ASIGNADA</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-7">
+                                            <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider ${user.empresa === 'Aquanqa 1' ? 'bg-blue-50 text-blue-600 ring-1 ring-blue-100' : 'bg-green-50 text-green-600 ring-1 ring-green-100'}`}>
+                                                {user.empresa || '---'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-7">
+                                            <span className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+                                                {user.rol === 'obrero' ? 'Obrero' : user.rol === 'trabajador' ? 'Trabajador' : user.rol === 'empleado' ? 'Empleado' : 'Administrador'}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-7">
                                             <div className="flex flex-col">
@@ -486,18 +593,28 @@ export const UserMaster = () => {
                                     <table className="w-full text-xs">
                                         <thead>
                                             <tr className="bg-slate-200/50">
-                                                {['Nombre', 'Documento', 'Rol', 'Estado', 'Area ID'].map(h => (
-                                                    <th key={h} className="px-5 py-4 text-slate-500 font-black uppercase tracking-widest border-r border-slate-200 last:border-0 text-left">{h}</th>
-                                                ))}
+                                                {previewType === 'carga' ? (
+                                                    ['Nombre', 'Documento', 'Rol', 'Area', 'Empresa'].map(h => (
+                                                        <th key={h} className="px-5 py-4 text-slate-500 font-black uppercase tracking-widest border-r border-slate-200 last:border-0 text-left">{h}</th>
+                                                    ))
+                                                ) : (
+                                                    <th className="px-5 py-4 text-slate-500 font-black uppercase tracking-widest text-left">Documento</th>
+                                                )}
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr className="bg-white group">
-                                                <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Ejemplo Nombre]</td>
-                                                <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Ejemplo DNI]</td>
-                                                <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Ejemplo Rol]</td>
-                                                <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Activo]</td>
-                                                <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Ejemplo ID]</td>
+                                            <tr>
+                                                {previewType === 'carga' ? (
+                                                    <>
+                                                        <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Ejemplo Nombre]</td>
+                                                        <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Ejemplo DNI]</td>
+                                                        <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Ejemplo Rol]</td>
+                                                        <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[ADP / Remuneraciones]</td>
+                                                        <td className="px-5 py-4 text-slate-400 font-medium italic border-r border-slate-100 last:border-0">[Aquanqa 1]</td>
+                                                    </>
+                                                ) : (
+                                                    <td className="px-5 py-4 text-slate-400 font-medium italic">[Ejemplo DNI]</td>
+                                                )}
                                             </tr>
                                         </tbody>
                                     </table>

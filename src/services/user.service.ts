@@ -17,6 +17,9 @@ export const userService = {
                 id: u.id.toString(),
                 estado: u.estado === true ? 'Activo' : (u.estado === false ? 'Inactivo' : 'SIN CONTRATO'),
                 documento: u.documento || u.dni || '',
+                area_nombre: u.area?.nombre || u.area_nombre || '',
+                rol: u.rol?.toLowerCase() || 'obrero',
+                empresa: u.empresa || '',
             }));
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -37,14 +40,23 @@ export const userService = {
     },
 
     createUser: async (userData: Partial<User>): Promise<User> => {
+        // Map frontend contract types to backend format
+        const rolMap: Record<string, string> = {
+            'obrero': 'OBRERO',
+            'trabajador': 'TRABAJADOR',
+            'empleado': 'EMPLEADO',
+            'administrador': 'ADMIN'
+        };
+
         const payload = {
             documento: userData.documento,
             nombre: userData.nombre,
             email: userData.email || userData.documento, // Default User to DNI
             // Convert 'Activo' strings back to boolean for backend
             estado: userData.estado === 'Activo',
-            rol: (userData.rol === 'admin' ? 'ADMIN' : (userData.rol === 'gestor' ? 'GESTOR' : (userData.rol === 'obrero' ? 'EMPLEADO' : 'EMPLEADO'))),
+            rol: rolMap[userData.rol || 'obrero'] || 'OBRERO',
             contrasena: userData.contrasena || userData.documento || 'password123',
+            empresa: userData.empresa,
         };
         console.log('Sending create user:', payload);
         const response: any = await api.post('/users', payload);
@@ -54,11 +66,22 @@ export const userService = {
             ...data,
             id: data.id?.toString(),
             estado: data.estado === true ? 'Activo' : 'Inactivo',
-            documento: data.documento || ''
+            documento: data.documento || '',
+            rol: userData.rol || 'obrero',
+            area_nombre: data.area?.nombre || '',
+            empresa: data.empresa || userData.empresa
         } as User;
     },
 
     updateUser: async (id: string, userData: Partial<User>): Promise<User> => {
+        // Map frontend contract types to backend format
+        const rolMap: Record<string, string> = {
+            'obrero': 'OBRERO',
+            'trabajador': 'TRABAJADOR',
+            'empleado': 'EMPLEADO',
+            'administrador': 'ADMIN'
+        };
+
         const payload: any = {};
         if (userData.nombre) payload.nombre = userData.nombre;
         if (userData.documento) payload.documento = userData.documento;
@@ -67,7 +90,10 @@ export const userService = {
             payload.estado = userData.estado === 'Activo';
         }
         if (userData.rol) {
-            payload.rol = (userData.rol === 'admin' ? 'ADMIN' : (userData.rol === 'gestor' ? 'GESTOR' : 'EMPLEADO'));
+            payload.rol = rolMap[userData.rol] || 'OBRERO';
+        }
+        if (userData.empresa) {
+            payload.empresa = userData.empresa;
         }
 
         console.log(`Sending update user ${id}:`, payload);
@@ -78,7 +104,10 @@ export const userService = {
             ...data,
             id: data.id?.toString(),
             estado: data.estado === true ? 'Activo' : 'Inactivo',
-            documento: data.documento || ''
+            documento: data.documento || '',
+            rol: userData.rol || data.rol?.toLowerCase() || 'obrero',
+            area_nombre: data.area?.nombre || '',
+            empresa: data.empresa || userData.empresa
         } as User;
     },
 

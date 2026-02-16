@@ -4,10 +4,12 @@ export interface User {
     email: string;
     contrasena: string;
     area_id: string;
-    rol: 'empleado' | 'gestor' | 'admin' | 'obrero' | 'administrativo';
+    area_nombre?: string; // Nombre del área para mostrar
+    rol: 'obrero' | 'trabajador' | 'empleado' | 'administrador';
     estado: 'Activo' | 'Inactivo' | 'SIN CONTRATO';
     fecha_registro: string;
-    documento?: string; // Agregado para el filtro de la imagen
+    documento?: string;
+    empresa?: 'Aquanqa 1' | 'Aquanqa 2';
 }
 
 export interface Area {
@@ -68,6 +70,7 @@ export interface Justification {
     fecha_creacion: string;
     fecha_actualizacion: string;
     usuario_nombre?: string;
+    usuario_documento?: string;
     area_nombre?: string;
     adjuntos?: JustificationAttachment[];
 }
@@ -85,11 +88,13 @@ export const MOCK_USERS: User[] = [
         nombre: 'Admin User',
         email: 'admin@aquanqa.com',
         contrasena: 'password',
-        rol: 'admin',
+        rol: 'administrador',
         area_id: '1',
+        area_nombre: 'Remuneraciones',
         estado: 'Activo',
         fecha_registro: '2024-01-01',
-        documento: '70691234'
+        documento: '70691234',
+        empresa: 'Aquanqa 1'
     },
     {
         id: '2',
@@ -98,31 +103,37 @@ export const MOCK_USERS: User[] = [
         contrasena: 'password',
         rol: 'empleado',
         area_id: '3',
+        area_nombre: 'ADP',
         estado: 'Activo',
         fecha_registro: '2024-05-15',
-        documento: '45678912'
+        documento: '45678912',
+        empresa: 'Aquanqa 1'
     },
     {
         id: '3',
         nombre: 'María García',
         email: 'maria@aquanqa.com',
         contrasena: 'password',
-        rol: 'empleado',
+        rol: 'trabajador',
         area_id: '2',
+        area_nombre: 'Bienestar Social',
         estado: 'SIN CONTRATO',
         fecha_registro: '2024-06-20',
-        documento: '12345678'
+        documento: '12345678',
+        empresa: 'Aquanqa 2'
     },
     {
         id: '4',
         nombre: 'Sandra López',
         email: 'sandra@aquanqa.com',
         contrasena: 'password',
-        rol: 'empleado',
+        rol: 'obrero',
         area_id: '1',
+        area_nombre: 'Remuneraciones',
         estado: 'Activo',
         fecha_registro: '2024-02-10',
-        documento: '87654321'
+        documento: '87654321',
+        empresa: 'Aquanqa 2'
     },
 ];
 

@@ -16,6 +16,7 @@ export const UserModal = ({ isOpen, onClose, onSave, user, isSubmitting }: UserM
         rol: 'obrero',
         estado: 'Activo',
         documento: '',
+        empresa: 'Aquanqa 1',
     });
 
     useEffect(() => {
@@ -27,6 +28,7 @@ export const UserModal = ({ isOpen, onClose, onSave, user, isSubmitting }: UserM
                 rol: 'obrero',
                 estado: 'Activo',
                 documento: '',
+                empresa: 'Aquanqa 1',
             });
         }
     }, [user, isOpen]);
@@ -105,6 +107,22 @@ export const UserModal = ({ isOpen, onClose, onSave, user, isSubmitting }: UserM
                                     title="Ingrese exactamente 8 dígitos"
                                 />
                             </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-gray-500 flex items-center">
+                                    EMPRESA
+                                </label>
+                                <select
+                                    required
+                                    value={formData.empresa}
+                                    onChange={(e) => setFormData({ ...formData, empresa: e.target.value as User['empresa'] })}
+                                    className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none bg-transparent text-sm font-medium"
+                                    title="Seleccionar empresa"
+                                >
+                                    <option value="Aquanqa 1">Aquanqa 1</option>
+                                    <option value="Aquanqa 2">Aquanqa 2</option>
+                                </select>
+                            </div>
                         </div>
 
                         {/* Configuración de Sistema */}
@@ -125,9 +143,11 @@ export const UserModal = ({ isOpen, onClose, onSave, user, isSubmitting }: UserM
                                     title="Seleccionar tipo de contrato"
                                 >
                                     <option value="obrero">Obrero</option>
-                                    <option value="administrativo">Trabajador</option>
-                                </select >
-                            </div >
+                                    <option value="trabajador">Trabajador</option>
+                                    <option value="empleado">Empleado</option>
+                                    <option value="administrador">Administrador</option>
+                                </select>
+                            </div>
 
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-gray-500 flex items-center">
