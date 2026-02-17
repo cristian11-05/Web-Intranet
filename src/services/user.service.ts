@@ -17,7 +17,8 @@ export const userService = {
                 id: u.id.toString(),
                 estado: u.estado === true ? 'Activo' : (u.estado === false ? 'Inactivo' : 'SIN CONTRATO'),
                 documento: u.documento || u.dni || '',
-                area_nombre: u.area?.nombre || u.area_nombre || '',
+                area_id: u.area?.id?.toString() || u.area_id?.toString() || '1',
+                area_nombre: u.area?.nombre || u.area_nombre || 'Sin área',
                 rol: u.rol?.toLowerCase() || 'obrero',
                 empresa: u.empresa || '',
             }));
@@ -36,6 +37,8 @@ export const userService = {
             id: u.id?.toString() || '0',
             estado: u.estado === true ? 'Activo' : (u.estado === false ? 'Inactivo' : 'SIN CONTRATO'),
             documento: u.documento || u.dni || '',
+            area_id: u.area?.id?.toString() || u.area_id?.toString() || '1',
+            area_nombre: u.area?.nombre || u.area_nombre || 'Sin área',
         } as User;
     },
 
@@ -51,14 +54,13 @@ export const userService = {
         const payload = {
             documento: userData.documento,
             nombre: userData.nombre,
-            email: userData.email || userData.documento, // Default User to DNI
             // Convert 'Activo' strings back to boolean for backend
             estado: userData.estado === 'Activo',
             rol: rolMap[userData.rol || 'obrero'] || 'OBRERO',
             contrasena: userData.contrasena || userData.documento || 'password123',
             empresa: userData.empresa,
+            area_id: parseInt(userData.area_id || '1', 10),
         };
-        console.log('Sending create user:', payload);
         const response: any = await api.post('/users', payload);
         const data = response.data || response;
         // Return mapped object for immediate UI update
@@ -68,7 +70,8 @@ export const userService = {
             estado: data.estado === true ? 'Activo' : 'Inactivo',
             documento: data.documento || '',
             rol: userData.rol || 'obrero',
-            area_nombre: data.area?.nombre || '',
+            area_id: data.area?.id?.toString() || data.area_id?.toString() || userData.area_id,
+            area_nombre: data.area?.nombre || data.area_nombre || '',
             empresa: data.empresa || userData.empresa
         } as User;
     },
@@ -85,7 +88,6 @@ export const userService = {
         const payload: any = {};
         if (userData.nombre) payload.nombre = userData.nombre;
         if (userData.documento) payload.documento = userData.documento;
-        if (userData.email) payload.email = userData.email;
         if (userData.estado !== undefined) {
             payload.estado = userData.estado === 'Activo';
         }
@@ -94,6 +96,9 @@ export const userService = {
         }
         if (userData.empresa) {
             payload.empresa = userData.empresa;
+        }
+        if (userData.area_id) {
+            payload.area_id = parseInt(userData.area_id, 10);
         }
 
         console.log(`Sending update user ${id}:`, payload);
@@ -106,7 +111,8 @@ export const userService = {
             estado: data.estado === true ? 'Activo' : 'Inactivo',
             documento: data.documento || '',
             rol: userData.rol || data.rol?.toLowerCase() || 'obrero',
-            area_nombre: data.area?.nombre || '',
+            area_id: data.area?.id?.toString() || data.area_id?.toString() || userData.area_id,
+            area_nombre: data.area?.nombre || data.area_nombre || '',
             empresa: data.empresa || userData.empresa
         } as User;
     },

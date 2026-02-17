@@ -9,7 +9,7 @@ export interface User {
     estado: 'Activo' | 'Inactivo' | 'SIN CONTRATO';
     fecha_registro: string;
     documento?: string;
-    empresa?: 'Aquanqa 1' | 'Aquanqa 2';
+    empresa?: 'AQUANQA I' | 'AQUANQA II';
 }
 
 export interface Area {
@@ -94,7 +94,7 @@ export const MOCK_USERS: User[] = [
         estado: 'Activo',
         fecha_registro: '2024-01-01',
         documento: '70691234',
-        empresa: 'Aquanqa 1'
+        empresa: 'AQUANQA I'
     },
     {
         id: '2',
@@ -107,7 +107,7 @@ export const MOCK_USERS: User[] = [
         estado: 'Activo',
         fecha_registro: '2024-05-15',
         documento: '45678912',
-        empresa: 'Aquanqa 1'
+        empresa: 'AQUANQA I'
     },
     {
         id: '3',
@@ -120,7 +120,7 @@ export const MOCK_USERS: User[] = [
         estado: 'SIN CONTRATO',
         fecha_registro: '2024-06-20',
         documento: '12345678',
-        empresa: 'Aquanqa 2'
+        empresa: 'AQUANQA II'
     },
     {
         id: '4',
@@ -133,7 +133,7 @@ export const MOCK_USERS: User[] = [
         estado: 'Activo',
         fecha_registro: '2024-02-10',
         documento: '87654321',
-        empresa: 'Aquanqa 2'
+        empresa: 'AQUANQA II'
     },
 ];
 

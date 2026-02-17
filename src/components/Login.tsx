@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
+import { toast } from 'sonner';
 
 export const Login = () => {
     const [identifier, setIdentifier] = useState('');
@@ -18,9 +19,15 @@ export const Login = () => {
 
         try {
             await authService.login(identifier, contrasena);
+            toast.success('Sesión iniciada', { description: 'Bienvenido al sistema AQUANQA.' });
             navigate('/dashboard');
         } catch (err: any) {
-            setError(err.message || 'Credenciales inválidas');
+            console.error('Login error:', err);
+            // API errors are handled by interceptor, but we should still show something if it fails here
+            if (err.message && !err.message.includes('handled')) {
+                // If it's not a handled API error, show it
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }

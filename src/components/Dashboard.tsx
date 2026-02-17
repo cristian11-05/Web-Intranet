@@ -3,7 +3,9 @@ import { Layout } from './Layout';
 import { justificationService } from '../services/justification.service';
 import { suggestionService } from '../services/suggestion.service';
 import { Loader2, FileDown } from 'lucide-react';
-import * as XLSX from 'xlsx-js-style';
+import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 const StatCard = ({ title, count, subtitle, type }: { title: string; count: number; subtitle: string; type?: 'default' | 'success' | 'warning' | 'danger' }) => {
     const colorClasses = {
@@ -127,220 +129,127 @@ export const Dashboard = () => {
                 suggestionService.getAllSuggestions(),
             ]);
 
-            // Preparar datos de Justificaciones
-            const justifData = justifications.map((j, index) => ({
-                '#': index + 1,
-                'Colaborador': j.usuario_nombre || 'N/A',
-                'Documento': j.usuario_documento || 'N/A',
-                'Área': j.area_nombre || 'N/A',
-                'Título': j.titulo || '',
-                'Descripción': j.descripcion || '',
-                'Fecha Evento': j.fecha_evento || '',
-                'Hora Inicio': j.hora_inicio || '',
-                'Hora Fin': j.hora_fin || '',
-                'Estado': j.estado === 'aprobado' ? 'Aprobado' :
-                    j.estado === 'rechazado' ? 'Rechazado' :
-                        j.estado === 'en_proceso' ? 'En Proceso' : 'Pendiente',
-                'Razón Rechazo': j.razon_rechazo || '',
-                'Fecha Creación': j.fecha_creacion ? new Date(j.fecha_creacion).toLocaleDateString('es-PE') : '',
-                'Fecha Actualización': j.fecha_actualizacion ? new Date(j.fecha_actualizacion).toLocaleDateString('es-PE') : '',
-            }));
-
-            // Preparar datos de Reportes y Consultas
-            const suggestionsData = suggestions.map((s, index) => ({
-                '#': index + 1,
-                'Colaborador': s.usuario_nombre || 'N/A',
-                'Área': s.area_nombre || 'N/A',
-                'Tipo': s.tipo === 'sugerencia' ? 'Reporte de Situación' : 'Te Escuchamos',
-                'Título': s.titulo || '',
-                'Descripción': s.descripcion || '',
-                'Estado': s.estado === 'revisada' ? 'Revisada' : 'Pendiente',
-                'Comentario Admin': s.comentario_admin || '',
-                'Fecha Creación': s.fecha_creacion ? new Date(s.fecha_creacion).toLocaleDateString('es-PE') : '',
-                'Fecha Actualización': s.fecha_actualizacion ? new Date(s.fecha_actualizacion).toLocaleDateString('es-PE') : '',
-            }));
-
-            // Crear libro de Excel
-            const wb = XLSX.utils.book_new();
+            const workbook = new ExcelJS.Workbook();
 
             // ========== HOJA 1: JUSTIFICACIONES ==========
-            const wsJustif = XLSX.utils.json_to_sheet(justifData);
+            const wsJustif = workbook.addWorksheet('Justificaciones');
 
-            // Ajustar ancho de columnas
-            const justifColWidths = [
-                { wch: 5 }, { wch: 25 }, { wch: 12 }, { wch: 20 }, { wch: 30 },
-                { wch: 50 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 },
-                { wch: 30 }, { wch: 15 }, { wch: 15 },
+            wsJustif.columns = [
+                { header: '#', key: 'index', width: 5 },
+                { header: 'Colaborador', key: 'colaborador', width: 25 },
+                { header: 'Documento', key: 'documento', width: 15 },
+                { header: 'Área', key: 'area', width: 20 },
+                { header: 'Título', key: 'titulo', width: 30 },
+                { header: 'Descripción', key: 'descripcion', width: 50 },
+                { header: 'Fecha Evento', key: 'fecha', width: 15 },
+                { header: 'H. Inicio', key: 'h_inicio', width: 10 },
+                { header: 'H. Fin', key: 'h_fin', width: 10 },
+                { header: 'Estado', key: 'estado', width: 15 },
+                { header: 'Razón Rechazo', key: 'rechazo', width: 30 },
+                { header: 'Registro', key: 'registro', width: 15 }
             ];
-            wsJustif['!cols'] = justifColWidths;
 
-            // Definir columnas para la hoja de Justificaciones
-            const justifAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+            // Estilo de cabeceras
+            const headerRowJ = wsJustif.getRow(1);
+            headerRowJ.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
+            headerRowJ.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E40AF' } }; // Blue-800
+            headerRowJ.alignment = { vertical: 'middle', horizontal: 'center' };
 
-            // Aplicar estilos a encabezados (fila 1)
-            justifAlphabet.forEach(col => {
-                const cellRef = `${col}1`;
-                if (wsJustif[cellRef]) {
-                    wsJustif[cellRef].s = {
-                        fill: { fgColor: { rgb: "1E40AF" } }, // Azul oscuro (Tailwind blue-800)
-                        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
-                        alignment: { horizontal: "center", vertical: "center" },
-                        border: {
-                            top: { style: "thin", color: { rgb: "000000" } },
-                            bottom: { style: "thin", color: { rgb: "000000" } },
-                            left: { style: "thin", color: { rgb: "000000" } },
-                            right: { style: "thin", color: { rgb: "000000" } }
-                        }
-                    };
+            justifications.forEach((j, index) => {
+                const row = wsJustif.addRow({
+                    index: index + 1,
+                    colaborador: j.usuario_nombre || 'N/A',
+                    documento: j.usuario_documento || 'N/A',
+                    area: j.area_nombre || 'N/A',
+                    titulo: j.titulo || '',
+                    descripcion: j.descripcion || '',
+                    fecha: j.fecha_evento || '',
+                    h_inicio: j.hora_inicio || '',
+                    h_fin: j.hora_fin || '',
+                    estado: j.estado?.toUpperCase() || 'PENDIENTE',
+                    rechazo: j.razon_rechazo || '',
+                    registro: j.fecha_creacion ? new Date(j.fecha_creacion).toLocaleDateString('es-PE') : ''
+                });
+
+                // Estilo alternado
+                if (index % 2 !== 0) {
+                    row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F9FF' } };
+                }
+
+                // Color por estado
+                const estadoCell = row.getCell('estado');
+                const estado = j.estado?.toLowerCase();
+                if (estado === 'aprobado') {
+                    estadoCell.font = { bold: true, color: { argb: 'FF065F46' } };
+                    estadoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
+                } else if (estado === 'rechazado') {
+                    estadoCell.font = { bold: true, color: { argb: 'FF991B1B' } };
+                    estadoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+                } else if (estado === 'pendiente') {
+                    estadoCell.font = { bold: true, color: { argb: 'FF92400E' } };
+                    estadoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
                 }
             });
-
-            // Aplicar estilos a datos y colores alternados
-            const justifRowCount = justifData.length;
-            for (let row = 2; row <= justifRowCount + 1; row++) {
-                const isEven = row % 2 === 0;
-
-                justifAlphabet.forEach((col) => {
-                    const cellRef = `${col}${row}`;
-                    if (!wsJustif[cellRef]) wsJustif[cellRef] = { v: '' };
-
-                    // Color de fondo alternado
-                    const bgColor = isEven ? "F0F9FF" : "FFFFFF"; // Azul muy claro / Blanco
-
-                    // Estilo base
-                    wsJustif[cellRef].s = {
-                        fill: { fgColor: { rgb: bgColor } },
-                        font: { sz: 10, color: { rgb: "1E293B" } }, // Slate-800
-                        alignment: { vertical: "center", wrapText: true },
-                        border: {
-                            top: { style: "thin", color: { rgb: "E5E7EB" } },
-                            bottom: { style: "thin", color: { rgb: "E5E7EB" } },
-                            left: { style: "thin", color: { rgb: "E5E7EB" } },
-                            right: { style: "thin", color: { rgb: "E5E7EB" } }
-                        }
-                    };
-
-                    // Centrar columnas específicas
-                    if (col === 'A' || col === 'C' || col === 'G' || col === 'H' || col === 'I' || col === 'J' || col === 'L' || col === 'M') {
-                        wsJustif[cellRef].s.alignment = { ...wsJustif[cellRef].s.alignment, horizontal: "center" };
-                    }
-
-                    // Colorear según estado (columna J)
-                    if (col === 'J' && wsJustif[cellRef].v) {
-                        const estado = wsJustif[cellRef].v.toString();
-                        if (estado === 'Aprobado') {
-                            wsJustif[cellRef].s.fill = { fgColor: { rgb: "D1FAE5" } }; // Verde claro (Emerald-100)
-                            wsJustif[cellRef].s.font = { bold: true, color: { rgb: "065F46" }, sz: 10 }; // Emerald-800
-                        } else if (estado === 'Rechazado') {
-                            wsJustif[cellRef].s.fill = { fgColor: { rgb: "FEE2E2" } }; // Rojo claro (Rose-100)
-                            wsJustif[cellRef].s.font = { bold: true, color: { rgb: "991B1B" }, sz: 10 }; // Rose-800
-                        } else if (estado === 'Pendiente') {
-                            wsJustif[cellRef].s.fill = { fgColor: { rgb: "FEF3C7" } }; // Amarillo claro (Amber-100)
-                            wsJustif[cellRef].s.font = { bold: true, color: { rgb: "92400E" }, sz: 10 }; // Amber-800
-                        }
-                    }
-                });
-            }
 
             // ========== HOJA 2: REPORTES Y CONSULTAS ==========
-            const wsSuggestions = XLSX.utils.json_to_sheet(suggestionsData);
-
-            // Ajustar ancho de columnas
-            const suggestionsColWidths = [
-                { wch: 5 }, { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 30 },
-                { wch: 50 }, { wch: 12 }, { wch: 40 }, { wch: 15 }, { wch: 15 },
+            const wsSuggestions = workbook.addWorksheet('Reportes y Consultas');
+            wsSuggestions.columns = [
+                { header: '#', key: 'index', width: 5 },
+                { header: 'Colaborador', key: 'colaborador', width: 25 },
+                { header: 'Área', key: 'area', width: 20 },
+                { header: 'Tipo', key: 'tipo', width: 25 },
+                { header: 'Título', key: 'titulo', width: 30 },
+                { header: 'Descripción', key: 'descripcion', width: 50 },
+                { header: 'Estado', key: 'estado', width: 15 },
+                { header: 'Registro', key: 'registro', width: 15 }
             ];
-            wsSuggestions['!cols'] = suggestionsColWidths;
 
-            // Definir columnas para la hoja de Sugerencias
-            const sugAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+            const headerRowS = wsSuggestions.getRow(1);
+            headerRowS.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
+            headerRowS.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF059669' } }; // Emerald-600
+            headerRowS.alignment = { vertical: 'middle', horizontal: 'center' };
 
-            // Aplicar estilos a encabezados
-            sugAlphabet.forEach(col => {
-                const cellRef = `${col}1`;
-                if (wsSuggestions[cellRef]) {
-                    wsSuggestions[cellRef].s = {
-                        fill: { fgColor: { rgb: "059669" } }, // Verde oscuro (Emerald-600)
-                        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
-                        alignment: { horizontal: "center", vertical: "center" },
-                        border: {
-                            top: { style: "thin", color: { rgb: "000000" } },
-                            bottom: { style: "thin", color: { rgb: "000000" } },
-                            left: { style: "thin", color: { rgb: "000000" } },
-                            right: { style: "thin", color: { rgb: "000000" } }
-                        }
-                    };
+            suggestions.forEach((s, index) => {
+                const row = wsSuggestions.addRow({
+                    index: index + 1,
+                    colaborador: s.usuario_nombre || 'N/A',
+                    area: s.area_nombre || 'N/A',
+                    tipo: s.tipo === 'sugerencia' ? 'REPORTE DE SITUACIÓN' : 'TE ESCUCHAMOS',
+                    titulo: s.titulo || '',
+                    descripcion: s.descripcion || '',
+                    estado: s.estado?.toUpperCase() || 'PENDIENTE',
+                    registro: s.fecha_creacion ? new Date(s.fecha_creacion).toLocaleDateString('es-PE') : ''
+                });
+
+                if (index % 2 !== 0) {
+                    row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } };
+                }
+
+                // Estilos por tipo
+                const tipoCell = row.getCell('tipo');
+                if (s.tipo === 'sugerencia') {
+                    tipoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
+                    tipoCell.font = { bold: true, color: { argb: 'FF1E40AF' } };
+                } else {
+                    tipoCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+                    tipoCell.font = { bold: true, color: { argb: 'FF991B1B' } };
                 }
             });
 
-            // Aplicar estilos a datos
-            const sugRowCount = suggestionsData.length;
-            for (let row = 2; row <= sugRowCount + 1; row++) {
-                const isEven = row % 2 === 0;
-
-                sugAlphabet.forEach((col) => {
-                    const cellRef = `${col}${row}`;
-                    if (!wsSuggestions[cellRef]) wsSuggestions[cellRef] = { v: '' };
-
-                    const bgColor = isEven ? "F0FDF4" : "FFFFFF"; // Verde muy claro / Blanco
-
-                    wsSuggestions[cellRef].s = {
-                        fill: { fgColor: { rgb: bgColor } },
-                        font: { sz: 10, color: { rgb: "1E293B" } }, // Slate-800
-                        alignment: { vertical: "center", wrapText: true },
-                        border: {
-                            top: { style: "thin", color: { rgb: "E5E7EB" } },
-                            bottom: { style: "thin", color: { rgb: "E5E7EB" } },
-                            left: { style: "thin", color: { rgb: "E5E7EB" } },
-                            right: { style: "thin", color: { rgb: "E5E7EB" } }
-                        }
-                    };
-
-                    // Centrar columnas específicas
-                    if (col === 'A' || col === 'C' || col === 'D' || col === 'G' || col === 'I' || col === 'J') {
-                        wsSuggestions[cellRef].s.alignment = { ...wsSuggestions[cellRef].s.alignment, horizontal: "center" };
-                    }
-
-                    // Colorear según estado (columna G)
-                    if (col === 'G' && wsSuggestions[cellRef].v) {
-                        const estado = wsSuggestions[cellRef].v.toString();
-                        if (estado === 'Revisada') {
-                            wsSuggestions[cellRef].s.fill = { fgColor: { rgb: "D1FAE5" } };
-                            wsSuggestions[cellRef].s.font = { bold: true, color: { rgb: "065F46" }, sz: 10 };
-                        } else if (estado === 'Pendiente') {
-                            wsSuggestions[cellRef].s.fill = { fgColor: { rgb: "FEF3C7" } };
-                            wsSuggestions[cellRef].s.font = { bold: true, color: { rgb: "92400E" }, sz: 10 };
-                        }
-                    }
-
-                    // Colorear según tipo (columna D)
-                    if (col === 'D' && wsSuggestions[cellRef].v) {
-                        const tipo = wsSuggestions[cellRef].v.toString();
-                        if (tipo === 'Reporte de Situación') {
-                            wsSuggestions[cellRef].s.fill = { fgColor: { rgb: "DBEAFE" } }; // Azul claro (Blue-100)
-                            wsSuggestions[cellRef].s.font = { bold: true, color: { rgb: "1E40AF" }, sz: 10 }; // Blue-800
-                        } else if (tipo === 'Te Escuchamos') {
-                            wsSuggestions[cellRef].s.fill = { fgColor: { rgb: "FEE2E2" } }; // Rojo claro (Rose-100)
-                            wsSuggestions[cellRef].s.font = { bold: true, color: { rgb: "991B1B" }, sz: 10 }; // Rose-800
-                        }
-                    }
-                });
-            }
-
-            // Agregar hojas al libro
-            XLSX.utils.book_append_sheet(wb, wsJustif, 'Justificaciones');
-            XLSX.utils.book_append_sheet(wb, wsSuggestions, 'Reportes y Consultas');
-
-            // Generar nombre de archivo con fecha actual
+            // Descarga Nativa
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
             const fecha = new Date().toLocaleDateString('es-PE').replace(/\//g, '-');
-            const fileName = `Reporte_RRHH_${fecha}.xlsx`;
-
-            // Descargar archivo
-            XLSX.writeFile(wb, fileName);
+            anchor.href = url;
+            anchor.download = `Reporte_RRHH_MASTER_${fecha}.xlsx`;
+            anchor.click();
+            window.URL.revokeObjectURL(url);
 
         } catch (error) {
             console.error('Error exportando a Excel:', error);
-            alert('Error al generar el archivo Excel. Por favor intenta nuevamente.');
+            toast.error('Error de exportación', { description: 'No se pudo generar el reporte maestro.' });
         } finally {
             setExporting(false);
         }

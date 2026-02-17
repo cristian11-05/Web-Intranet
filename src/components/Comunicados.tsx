@@ -3,6 +3,7 @@ import { Layout } from './Layout';
 import { MessageSquare, Plus, Image as ImageIcon, Calendar, Edit2, Trash2 } from 'lucide-react';
 import { ComunicadoModal } from './ComunicadoModal';
 import { comunicadoService, Comunicado } from '../services/comunicado.service';
+import { toast } from 'sonner';
 
 export const Comunicados = () => {
     const [comunicados, setComunicados] = useState<Comunicado[]>([]);
@@ -49,24 +50,27 @@ export const Comunicados = () => {
             loadComunicados();
             setIsModalOpen(false);
             setSelectedComunicado(null);
+            toast.success(selectedComunicado ? 'Comunicado actualizado' : 'Comunicado publicado exitosamente');
         } catch (error) {
-            console.error('Error saving comunicado:', error);
-            alert('Error al guardar el comunicado');
+            // Error handled by global interceptor
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm('¿Estás seguro de eliminar este comunicado?')) {
-            try {
-                await comunicadoService.delete(id);
-                loadComunicados();
-            } catch (error) {
-                console.error('Error deleting comunicado:', error);
-                alert('Error al eliminar el comunicado');
+        toast.confirm('¿Estás seguro de eliminar este comunicado?', {
+            onConfirm: async () => {
+                toast.promise(comunicadoService.delete(id), {
+                    loading: 'Eliminando comunicado...',
+                    success: () => {
+                        loadComunicados();
+                        return 'Comunicado eliminado correctamente';
+                    },
+                    error: 'Error al eliminar el comunicado'
+                });
             }
-        }
+        });
     };
 
     const openEdit = (comunicado: Comunicado) => {

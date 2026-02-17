@@ -5,6 +5,8 @@ import { Search, UserPlus, Edit2, Trash2, FileDown, UploadCloud, UserCircle, Loa
 import { UserModal } from './UserModal';
 import { userService } from '../services/user.service';
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { toast } from 'sonner';
 
 const normalizeHeader = (header: string) => {
     return header.toLowerCase()
@@ -22,7 +24,7 @@ export const UserMaster = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDoc, setFilterDoc] = useState('');
     const [filterName, setFilterName] = useState('');
-    const [filterCompany, setFilterCompany] = useState<string>('');
+    const [filteredEmpresa, setFilteredEmpresa] = useState<string>('');
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -63,7 +65,10 @@ export const UserMaster = () => {
 
             const matchesDoc = !filterDoc || (user.documento && user.documento.includes(filterDoc));
             const matchesName = !filterName || (user.nombre && user.nombre.toLowerCase().includes(filterName.toLowerCase()));
-            const matchesCompany = !filterCompany || user.empresa === filterCompany;
+            const matchesCompany = !filteredEmpresa ||
+                (user.empresa === filteredEmpresa) ||
+                (filteredEmpresa === 'AQUANQA I' && (user.empresa?.toString().toLowerCase().includes('1') || user.empresa?.toString().toLowerCase().includes('i'))) ||
+                (filteredEmpresa === 'AQUANQA II' && (user.empresa?.toString().toLowerCase().includes('2') || user.empresa?.toString().toLowerCase().includes('ii')));
 
             return matchesGlobal && matchesDoc && matchesName && matchesCompany;
         })
@@ -93,22 +98,23 @@ export const UserMaster = () => {
             loadUsers();
             setIsModalOpen(false);
             setSelectedUser(null);
+            toast.success(selectedUser ? 'Usuario actualizado' : 'Usuario creado correctamente');
         } catch (err: any) {
-            alert(err.message || 'Error al guardar el usuario');
+            // Error is already handled by api.ts interceptor toast, but we can add specific context here if needed
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm('¿Estás seguro de eliminar a este trabajador?')) {
-            try {
-                await userService.deleteUser(id);
+        toast.promise(userService.deleteUser(id), {
+            loading: 'Eliminando trabajador...',
+            success: () => {
                 setUsers(users.filter(u => u.id !== id));
-            } catch (err) {
-                alert('Error al eliminar el usuario');
-            }
-        }
+                return 'Trabajador eliminado exitosamente';
+            },
+            error: 'No se pudo eliminar al trabajador'
+        });
     };
 
     const openEdit = (user: User) => {
@@ -130,12 +136,15 @@ export const UserMaster = () => {
                 const rows = XLSX.utils.sheet_to_json<any>(sheet);
 
                 if (rows.length === 0) {
-                    alert('El archivo está vacío');
+                    toast.error('Archivo vacío', { description: 'El archivo Excel no contiene datos.' });
                     return;
                 }
 
                 let successCount = 0;
                 let errorCount = 0;
+                let duplicateCount = 0;
+
+                const existingDnis = new Set(users.map(u => u.documento));
 
                 for (const row of rows) {
                     try {
@@ -152,12 +161,17 @@ export const UserMaster = () => {
                         const empresaKey = headerMap['empresa'];
 
                         if (!row[nameKey] || !row[docKey]) {
-                            console.warn('Fila omitida por falta de nombre o documento:', row);
                             errorCount++;
                             continue;
                         }
 
-                        // Mapear área por nombre a ID
+                        const currentDni = row[docKey]?.toString();
+                        if (existingDnis.has(currentDni)) {
+                            duplicateCount++;
+                            continue;
+                        }
+
+                        // Mapear área por nombre a ID (INSENSIBLE A MAYÚSCULAS)
                         const areaValue = row[areaKey]?.toString().toLowerCase().trim() || '';
                         let areaId = '1'; // Default: Remuneraciones
 
@@ -165,12 +179,14 @@ export const UserMaster = () => {
                         else if (areaValue.includes('adp')) areaId = '3';
                         else if (areaValue.includes('transporte')) areaId = '4';
                         else if (areaValue.includes('remunera')) areaId = '1';
-                        // if numeric, use as is
                         else if (/^\d+$/.test(areaValue)) areaId = areaValue;
 
-                        // Mapear rol a formato backend (obrero, trabajador, empleado, administrador)
-                        let rol = (row[rolKey]?.toString().toLowerCase() || 'obrero');
+                        // Mapear rol a formato backend (obrero, trabajador, empleado, administrador) (INSENSIBLE)
+                        let rol = (row[rolKey]?.toString().toLowerCase() || 'obrero').trim();
                         if (rol.includes('admin')) rol = 'administrador';
+                        else if (rol.includes('traba')) rol = 'trabajador';
+                        else if (rol.includes('empl')) rol = 'empleado';
+                        else if (rol.includes('obre')) rol = 'obrero';
 
                         await userService.createUser({
                             nombre: row[nameKey]?.toString(),
@@ -178,7 +194,7 @@ export const UserMaster = () => {
                             rol: rol as any,
                             estado: 'Activo',
                             area_id: areaId,
-                            empresa: row[empresaKey]?.toString() as any || 'Aquanqa 1'
+                            empresa: (row[empresaKey]?.toString().toLowerCase().includes('2') || row[empresaKey]?.toString().toLowerCase().includes('ii') ? 'AQUANQA II' : 'AQUANQA I') as any
                         });
                         successCount++;
                     } catch (err) {
@@ -187,10 +203,15 @@ export const UserMaster = () => {
                     }
                 }
 
-                alert(`Proceso completado.\nÉxito: ${successCount}\nErrores: ${errorCount}`);
+                if (successCount > 0 || duplicateCount > 0 || errorCount > 0) {
+                    toast.success('Proceso de carga finalizado', {
+                        description: `Éxito: ${successCount} | Duplicados: ${duplicateCount} | Errores: ${errorCount}`,
+                        duration: 5000,
+                    });
+                }
                 loadUsers();
             } catch (err: any) {
-                alert('Error al leer el archivo Excel: ' + err.message);
+                toast.error('Error de lectura', { description: 'No se pudo procesar el archivo Excel.' });
             } finally {
                 setLoading(false);
                 if (e.target) e.target.value = '';
@@ -213,7 +234,7 @@ export const UserMaster = () => {
                 // Flexible mapping
                 const rows = XLSX.utils.sheet_to_json<any>(sheet);
                 if (rows.length === 0) {
-                    alert('El archivo está vacío');
+                    toast.error('Archivo vacío', { description: 'El archivo Excel no contiene datos.' });
                     return;
                 }
 
@@ -227,21 +248,21 @@ export const UserMaster = () => {
                 const dniKey = headerMap['documento'] || headerMap['dni'] || headerMap['nro_documento'] || headerMap['nro_doc'];
 
                 if (!dniKey) {
-                    alert('No se encontró una columna de DNI o Documento. Asegúrate de que el excel tenga una columna llamada "DNI" o "Documento"');
+                    toast.error('Formato inválido', { description: 'No se encontró la columna DNI o Documento.' });
                     return;
                 }
 
                 const dnis = rows.map(row => row[dniKey]?.toString()).filter(Boolean);
 
                 if (dnis.length === 0) {
-                    alert('No se encontraron números de documento válidos en el archivo');
+                    toast.error('Sin datos', { description: 'No hay documentos válidos en el archivo.' });
                     return;
                 }
 
                 setPendingDnis(dnis);
                 setIsBulkDeleteModalOpen(true);
             } catch (err: any) {
-                alert('Error al leer el archivo Excel: ' + err.message);
+                toast.error('Error de lectura', { description: 'No se pudo leer el archivo Excel.' });
             }
         };
         reader.readAsBinaryString(file);
@@ -253,28 +274,110 @@ export const UserMaster = () => {
             setLoading(true);
             setIsBulkDeleteModalOpen(false);
             const result = await userService.bulkDelete(pendingDnis, bulkAction);
-            alert(`Acción completada: ${result.success} trabajadores procesados.`);
-            if (result.notFound && result.notFound.length > 0) {
-                console.warn('DNI no encontrados:', result.notFound);
-            }
+            toast.success('Baja masiva completada', {
+                description: `${result.success} registros procesados correctamente.`
+            });
             loadUsers();
         } catch (err: any) {
-            alert('Error al procesar la acción masiva: ' + err.message);
+            // Error is handled by global interceptor
         } finally {
             setLoading(false);
             setPendingDnis([]);
         }
     };
 
-    const downloadTemplate = (type: 'carga' | 'baja') => {
-        const headers = type === 'carga'
-            ? [['Nombre', 'Documento', 'Rol', 'Area', 'Empresa']]
-            : [['Documento']];
+    const downloadTemplate = async (type: 'carga' | 'baja') => {
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet(type === 'carga' ? 'Formato Carga' : 'Formato Baja');
 
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet(headers);
-        XLSX.utils.book_append_sheet(wb, ws, "Formato");
-        XLSX.writeFile(wb, `formato_${type}_masivo.xlsx`);
+        if (type === 'carga') {
+            // Configurar columnas
+            sheet.columns = [
+                { header: 'Empresa', key: 'empresa', width: 20 },
+                { header: 'Nombre', key: 'nombre', width: 30 },
+                { header: 'Documento', key: 'documento', width: 15 },
+                { header: 'Rol', key: 'rol', width: 20 },
+                { header: 'Area', key: 'area', width: 25 }
+            ];
+
+            // Estilo de cabeceras
+            const headerRow = sheet.getRow(1);
+            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            headerRow.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF1C71A6' } // Aquanqa Blue
+            };
+            headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+            // Agregar ejemplo
+            sheet.addRow({
+                empresa: 'AQUANQA I',
+                nombre: 'Juan Perez',
+                documento: '12345678',
+                rol: 'Obrero',
+                area: 'Remuneraciones'
+            });
+
+            // Configurar validación de datos (Desplegables nativos) para 100 filas
+            const roles = ['Obrero', 'Trabajador', 'Empleado', 'Administrador'];
+            const areas = ['Remuneraciones', 'Bienestar Social', 'ADP', 'Transportes'];
+            const empresas = ['AQUANQA I', 'AQUANQA II'];
+
+            for (let i = 2; i <= 100; i++) {
+                // Columna Empresa (A)
+                sheet.getCell(`A${i}`).dataValidation = {
+                    type: 'list',
+                    allowBlank: true,
+                    formulae: [`"${empresas.join(',')}"`],
+                    showErrorMessage: true,
+                    errorTitle: 'Valor inválido',
+                    error: 'Seleccione una empresa de la lista.'
+                };
+
+                // Columna Rol (D)
+                sheet.getCell(`D${i}`).dataValidation = {
+                    type: 'list',
+                    allowBlank: true,
+                    formulae: [`"${roles.join(',')}"`],
+                    showErrorMessage: true,
+                    errorTitle: 'Valor inválido',
+                    error: 'Seleccione un rol de la lista.'
+                };
+
+                // Columna Area (E)
+                sheet.getCell(`E${i}`).dataValidation = {
+                    type: 'list',
+                    allowBlank: true,
+                    formulae: [`"${areas.join(',')}"`],
+                    showErrorMessage: true,
+                    errorTitle: 'Valor inválido',
+                    error: 'Seleccione un área de la lista.'
+                };
+            }
+        } else {
+            sheet.columns = [
+                { header: 'Documento', key: 'documento', width: 15 }
+            ];
+            sheet.getRow(1).font = { bold: true };
+            sheet.addRow({ documento: '12345678' });
+        }
+
+        // Generar archivo
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+        // Descarga nativa (sin dependencia file-saver)
+        const url = window.URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `formato_${type}_masivo_rrhh.xlsx`;
+        anchor.click();
+        window.URL.revokeObjectURL(url);
+
+        toast.success('Plantilla generada con éxito', {
+            description: 'Usa los desplegables integrados en las celdas.'
+        });
         setIsPreviewOpen(false);
     };
 
@@ -287,8 +390,11 @@ export const UserMaster = () => {
                             <UserCircle size={32} strokeWidth={2.5} />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Maestro de Usuarios</h1>
-                            <p className="text-slate-400 font-medium text-sm tracking-tight">Gestiona el personal y permisos del sistema RRHH</p>
+                            <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-1 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600">Maestro de Usuarios</h1>
+                            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest opacity-80 flex items-center">
+                                <span className="w-1.5 h-1.5 rounded-full bg-aquanqa-blue mr-2"></span>
+                                Gestión de Cargas y Permisos de Personal
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -339,7 +445,7 @@ export const UserMaster = () => {
                     </div>
                     <button
                         type="button"
-                        onClick={() => { setFilterDoc(''); setFilterName(''); setFilterCompany(''); setSearchTerm(''); }}
+                        onClick={() => { setFilterDoc(''); setFilterName(''); setFilteredEmpresa(''); setSearchTerm(''); }}
                         className="text-[10px] text-slate-400 hover:text-aquanqa-blue transition-all font-black uppercase tracking-widest px-4 py-2 hover:bg-slate-50 rounded-xl"
                     >
                         Limpiar Filtros
@@ -372,13 +478,14 @@ export const UserMaster = () => {
                         <label htmlFor="filterCompany" className="text-[10px] font-black text-slate-400 mb-2 block transition-colors group-focus-within:text-aquanqa-blue uppercase tracking-widest opacity-70">Empresa / Sede</label>
                         <select
                             id="filterCompany"
-                            value={filterCompany}
-                            onChange={(e) => setFilterCompany(e.target.value)}
-                            className="w-full border-b border-slate-100 py-3 focus:border-aquanqa-blue outline-none text-sm font-bold transition-all bg-transparent appearance-none"
+                            value={filteredEmpresa}
+                            onChange={(e) => setFilteredEmpresa(e.target.value)}
+                            className="w-full bg-transparent border-0 border-b border-slate-200 py-3 focus:border-aquanqa-blue outline-none text-sm font-semibold text-slate-700"
+                            title="Filtrar por empresa"
                         >
                             <option value="">Todas las Empresas</option>
-                            <option value="Aquanqa 1">Aquanqa 1</option>
-                            <option value="Aquanqa 2">Aquanqa 2</option>
+                            <option value="AQUANQA I">AQUANQA I</option>
+                            <option value="AQUANQA II">AQUANQA II</option>
                         </select>
                     </div>
                 </div>
@@ -423,21 +530,33 @@ export const UserMaster = () => {
                         <table className="w-full text-left text-sm border-collapse">
                             <thead className="bg-slate-50/50 border-y border-slate-100/80">
                                 <tr>
-                                    <th className="px-10 py-5 w-20 text-center font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">#</th>
-                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Documento</th>
-                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Colaborador</th>
-                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Área</th>
-                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Empresa</th>
-                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Contrato</th>
-                                    <th className="px-6 py-5 font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Registro</th>
-                                    <th className="px-6 py-5 text-center font-black text-slate-400 uppercase text-[10px] tracking-[0.2em]">Estado</th>
-                                    <th className="px-10 py-5 text-right font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] w-40">Acciones</th>
+                                    <th className="px-10 py-6 w-20 text-center font-black text-slate-400 uppercase text-[9px] tracking-[0.2em] border-b-2 border-slate-100">#</th>
+                                    <th className="px-6 py-6 font-black text-slate-400 uppercase text-[9px] tracking-[0.2em] border-b-2 border-slate-100">Sede / Empresa</th>
+                                    <th className="px-6 py-6 font-black text-slate-400 uppercase text-[9px] tracking-[0.2em] border-b-2 border-slate-100">Documento</th>
+                                    <th className="px-6 py-6 font-black text-slate-400 uppercase text-[9px] tracking-[0.2em] border-b-2 border-slate-100">Colaborador</th>
+                                    <th className="px-6 py-6 font-black text-slate-400 uppercase text-[9px] tracking-[0.2em] border-b-2 border-slate-100">Área</th>
+                                    <th className="px-6 py-6 font-black text-slate-400 uppercase text-[9px] tracking-[0.2em] border-b-2 border-slate-100">Contrato</th>
+                                    <th className="px-6 py-6 font-black text-slate-400 uppercase text-[9px] tracking-[0.2em] border-b-2 border-slate-100">Registro</th>
+                                    <th className="px-6 py-6 text-center font-black text-slate-400 uppercase text-[9px] tracking-[0.2em] border-b-2 border-slate-100">Estado</th>
+                                    <th className="px-10 py-6 text-right font-black text-slate-400 uppercase text-[9px] tracking-[0.2em] w-40 border-b-2 border-slate-100">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
                                 {filteredUsers.map((user, index) => (
                                     <tr key={user.id} className="group hover:bg-slate-50/50 transition-all duration-300">
                                         <td className="px-10 py-8 text-center text-slate-300 font-mono text-xs group-hover:text-aquanqa-blue transition-colors">{String(index + 1).padStart(2, '0')}</td>
+
+                                        {/* SEDE / EMPRESA */}
+                                        <td className="px-6 py-8">
+                                            <div className="flex items-center space-x-3">
+                                                <div className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-sm ${(user.empresa?.toString().toLowerCase().includes('2') || user.empresa?.toString().toLowerCase().includes('ii'))
+                                                        ? 'bg-blue-50 text-aquanqa-blue border-blue-100'
+                                                        : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                    }`}>
+                                                    {(user.empresa?.toString().toLowerCase().includes('2') || user.empresa?.toString().toLowerCase().includes('ii')) ? 'AQUANQA II' : 'AQUANQA I'}
+                                                </div>
+                                            </div>
+                                        </td>
 
                                         {/* DOCUMENTACIÓN */}
                                         <td className="px-6 py-8">
@@ -465,18 +584,6 @@ export const UserMaster = () => {
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-slate-700 text-xs">{user.area_nombre || 'Sin área'}</span>
                                                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5 opacity-60">ÁREA</span>
-                                            </div>
-                                        </td>
-
-                                        {/* EMPRESA */}
-                                        <td className="px-6 py-8">
-                                            <div className="flex">
-                                                <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-[0.05em] min-w-[100px] text-center shadow-sm border ${user.empresa === 'Aquanqa 1'
-                                                    ? 'bg-blue-50 text-blue-700 border-blue-100'
-                                                    : 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                                                    }`}>
-                                                    {user.empresa || '---'}
-                                                </span>
                                             </div>
                                         </td>
 
@@ -523,18 +630,14 @@ export const UserMaster = () => {
                                         <td className="px-10 py-8">
                                             <div className="flex items-center justify-end space-x-2">
                                                 <button
-                                                    onClick={() => { setSelectedUser(user); setIsModalOpen(true); }}
+                                                    onClick={() => openEdit(user)}
                                                     className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-aquanqa-blue hover:text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-200 transition-all duration-200 group/btn"
                                                     title="Editar trabajador"
                                                 >
                                                     <Edit2 size={16} />
                                                 </button>
                                                 <button
-                                                    onClick={() => {
-                                                        if (window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
-                                                            userService.deleteUser(user.id).then(() => loadUsers());
-                                                        }
-                                                    }}
+                                                    onClick={() => handleDelete(user.id)}
                                                     className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-rose-500 hover:text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-rose-200 transition-all duration-200 group/btn"
                                                     title="Eliminar trabajador"
                                                 >

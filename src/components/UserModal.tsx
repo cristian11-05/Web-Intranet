@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X, Save, User as UserIcon, Shield, ToggleLeft } from 'lucide-react';
-import { User } from '../data/mockData';
+import { X, Save, User as UserIcon, Shield, ToggleLeft, Layers } from 'lucide-react';
+import { User, MOCK_AREAS } from '../data/mockData';
 
 interface UserModalProps {
     isOpen: boolean;
@@ -16,7 +16,8 @@ export const UserModal = ({ isOpen, onClose, onSave, user, isSubmitting }: UserM
         rol: 'obrero',
         estado: 'Activo',
         documento: '',
-        empresa: 'Aquanqa 1',
+        empresa: 'AQUANQA I',
+        area_id: '1',
     });
 
     useEffect(() => {
@@ -28,7 +29,8 @@ export const UserModal = ({ isOpen, onClose, onSave, user, isSubmitting }: UserM
                 rol: 'obrero',
                 estado: 'Activo',
                 documento: '',
-                empresa: 'Aquanqa 1',
+                empresa: 'AQUANQA I',
+                area_id: '1',
             });
         }
     }, [user, isOpen]);
@@ -73,6 +75,22 @@ export const UserModal = ({ isOpen, onClose, onSave, user, isSubmitting }: UserM
                             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Información Personal</h4>
 
                             <div className="space-y-1">
+                                <label className="text-xs font-bold text-gray-500 flex items-center uppercase tracking-widest">
+                                    <Shield size={12} className="mr-1" /> Empresa / Sede
+                                </label>
+                                <select
+                                    required
+                                    value={formData.empresa}
+                                    onChange={(e) => setFormData({ ...formData, empresa: e.target.value as User['empresa'] })}
+                                    className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none bg-transparent text-sm font-medium"
+                                    title="Seleccionar empresa"
+                                >
+                                    <option value="AQUANQA I">AQUANQA I</option>
+                                    <option value="AQUANQA II">AQUANQA II</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-1">
                                 <label className="text-xs font-bold text-gray-500 flex items-center">
                                     <UserIcon size={12} className="mr-1" /> NOMBRE COMPLETO
                                 </label>
@@ -85,8 +103,6 @@ export const UserModal = ({ isOpen, onClose, onSave, user, isSubmitting }: UserM
                                     className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none transition-colors text-sm font-medium"
                                 />
                             </div>
-
-
 
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-gray-500 flex items-center">
@@ -106,22 +122,6 @@ export const UserModal = ({ isOpen, onClose, onSave, user, isSubmitting }: UserM
                                     className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none transition-colors text-sm font-medium"
                                     title="Ingrese exactamente 8 dígitos"
                                 />
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-gray-500 flex items-center">
-                                    EMPRESA
-                                </label>
-                                <select
-                                    required
-                                    value={formData.empresa}
-                                    onChange={(e) => setFormData({ ...formData, empresa: e.target.value as User['empresa'] })}
-                                    className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none bg-transparent text-sm font-medium"
-                                    title="Seleccionar empresa"
-                                >
-                                    <option value="Aquanqa 1">Aquanqa 1</option>
-                                    <option value="Aquanqa 2">Aquanqa 2</option>
-                                </select>
                             </div>
                         </div>
 
@@ -146,6 +146,24 @@ export const UserModal = ({ isOpen, onClose, onSave, user, isSubmitting }: UserM
                                     <option value="trabajador">Trabajador</option>
                                     <option value="empleado">Empleado</option>
                                     <option value="administrador">Administrador</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-gray-500 flex items-center">
+                                    <Layers size={12} className="mr-1" /> ÁREA ASIGNADA
+                                </label>
+                                <select
+                                    required
+                                    value={formData.area_id || ''}
+                                    onChange={(e) => setFormData({ ...formData, area_id: e.target.value })}
+                                    className="w-full bg-gray-50 border-0 border-b-2 border-gray-200 py-2 focus:border-aquanqa-blue outline-none bg-transparent text-sm font-medium"
+                                    title="Seleccionar área"
+                                >
+                                    <option value="" disabled>Seleccione un área</option>
+                                    {MOCK_AREAS.map(area => (
+                                        <option key={area.id} value={area.id}>{area.nombre}</option>
+                                    ))}
                                 </select>
                             </div>
 

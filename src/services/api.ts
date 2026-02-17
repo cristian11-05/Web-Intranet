@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'sonner';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000';
 
@@ -23,41 +24,72 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+// Mapeo de errores comunes del backend a español
+const translateErrorMessage = (msg: string): string => {
+    if (!msg) return 'Error desconocido';
+
+    const translations: Record<string, string> = {
+        'email must be an email': 'El correo electrónico no es válido',
+        'documento must be longer than or equal to 8 characters': 'El documento debe tener al menos 8 caracteres',
+        'documento length must be equal to 8': 'El documento debe tener exactamente 8 caracteres',
+        'area_id must be an integer number': 'El área seleccionada no es válida (debe ser un número)',
+        'nombre should not be empty': 'El nombre no puede estar vacío',
+        'rol must be a valid enum value': 'El rol seleccionado no es válido',
+        'password must be longer than or equal to 6 characters': 'La contraseña debe tener al menos 6 caracteres',
+        'Unauthorized': 'No autorizado',
+        'User not found': 'Usuario no encontrado',
+        'Invalid credentials': 'Credenciales inválidas',
+        'Internal server error': 'Error interno del servidor',
+    };
+
+    // Búsqueda por coincidencia exacta
+    if (translations[msg]) return translations[msg];
+
+    // Búsqueda por coincidencia parcial (para errores tipo "X must be an Y")
+    for (const [key, value] of Object.entries(translations)) {
+        if (msg.toLowerCase().includes(key.toLowerCase())) return value;
+    }
+
+    return msg;
+};
+
 // Interceptor to handle standardized response format { status: true, data: { ... }, message: "" }
 api.interceptors.response.use(
     (response) => {
-        // Some backends return { status: true, data: { ... } }
-        // Others return just { ...data }
         const { status, data, message } = response.data;
 
-        // If 'status' is explicitly defined, we assume it serves as a success flag
         if (typeof status !== 'undefined') {
             if (status === false) {
-                return Promise.reject(new Error(message || 'Error en la respuesta del servidor'));
+                const errorMsg = translateErrorMessage(message);
+                toast.error('Error del Sistema', { description: errorMsg });
+                return Promise.reject(new Error(errorMsg));
             }
-            // Return data as is, whether it's an array or an object
+            if (message && response.config.method !== 'get') {
+                toast.success('Operación Exitosa', { description: translateErrorMessage(message) });
+            }
             return data;
         }
 
-        // Otherwise, assume the entire response.data is the payload
         return response.data;
     },
     (error) => {
         if (error.response?.status === 401) {
-            // Handle unauthorized (e.g., redirect to login or clear storage)
             localStorage.removeItem('access_token');
             window.location.href = '/login';
+            toast.error('Sesión Expirada', { description: 'Por favor, inicia sesión nuevamente.' });
+            return Promise.reject(new Error('Sesión Expirada'));
         }
 
-        // Extract message from server response if available
         const serverData = error.response?.data;
         let serverMessage = serverData?.message || serverData?.error || serverData?.detail || error.message;
 
-        // If message is an array (validation errors), join them
         if (Array.isArray(serverMessage)) {
-            serverMessage = serverMessage.join(', ');
+            serverMessage = serverMessage.map(m => translateErrorMessage(m)).join(', ');
+        } else {
+            serverMessage = translateErrorMessage(serverMessage);
         }
 
+        toast.error('Error de Comunicación', { description: serverMessage });
         return Promise.reject(new Error(serverMessage));
     }
 );

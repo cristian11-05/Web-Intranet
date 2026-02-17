@@ -7,9 +7,12 @@ import { Comunicados } from './components/Comunicados'
 
 import { Login } from './components/Login'
 
+import { ToasterProvider } from './components/ToasterProvider'
+
 function App() {
     return (
         <BrowserRouter>
+            <ToasterProvider />
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/dashboard" element={<Dashboard />} />
