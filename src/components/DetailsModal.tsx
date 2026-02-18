@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, CheckCircle, XCircle, Clock, Plus, Loader2 } from 'lucide-react';
+import { X, CheckCircle, XCircle, Plus, Loader2 } from 'lucide-react';
 
 // Simplified interface for data used in the modal to avoid assignment errors
 interface DetailsData {
@@ -38,9 +38,8 @@ export const DetailsModal = ({ isOpen, onClose, data, title, onUpdate }: Details
     const lastUpdatedId = useRef<string | null>(null);
 
     const isJustification = !data?.tipo; // If no 'tipo', it's a justification
-    const tipoLower = data?.tipo?.toLowerCase() || '';
-    const isReclamo = tipoLower.includes('reclamo') || tipoLower.includes('escuchamos');
-    const isReporte = !!(data?.tipo && !isReclamo);
+
+
 
     // Auto-mark as reviewed when opening a pending suggestion/report
     useEffect(() => {

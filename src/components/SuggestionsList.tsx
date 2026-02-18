@@ -44,9 +44,8 @@ export const SuggestionsList = () => {
     const filtered = suggestions.filter(item => {
         const tipoCS = item.tipo?.toLowerCase() || '';
         const isReclamo = tipoCS.includes('reclamo') || tipoCS.includes('escuchamos');
-        const isSugerencia = !isReclamo;
 
-        if (filterType === 'Reporte de situación' && !isSugerencia) return false;
+        if (filterType === 'Reporte de situación' && isReclamo) return false;
         if (filterType === 'Te escuchamos' && !isReclamo) return false;
 
         if (filterStatus !== 'Todas' && item.estado?.toLowerCase() !== filterStatus.toLowerCase()) return false;

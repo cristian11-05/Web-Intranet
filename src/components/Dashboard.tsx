@@ -4,7 +4,7 @@ import { justificationService } from '../services/justification.service';
 import { suggestionService } from '../services/suggestion.service';
 import { Loader2, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+
 import ExcelJS from 'exceljs';
 
 const StatCard = ({ title, count, subtitle, type }: { title: string; count: number; subtitle: string; type?: 'default' | 'success' | 'warning' | 'danger' }) => {

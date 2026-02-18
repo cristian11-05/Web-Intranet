@@ -59,18 +59,16 @@ export const Comunicados = () => {
     };
 
     const handleDelete = async (id: string) => {
-        toast.confirm('¿Estás seguro de eliminar este comunicado?', {
-            onConfirm: async () => {
-                toast.promise(comunicadoService.delete(id), {
-                    loading: 'Eliminando comunicado...',
-                    success: () => {
-                        loadComunicados();
-                        return 'Comunicado eliminado correctamente';
-                    },
-                    error: 'Error al eliminar el comunicado'
-                });
-            }
-        });
+        if (window.confirm('¿Estás seguro de eliminar este comunicado?')) {
+            toast.promise(comunicadoService.delete(id), {
+                loading: 'Eliminando comunicado...',
+                success: () => {
+                    loadComunicados();
+                    return 'Comunicado eliminado correctamente';
+                },
+                error: 'Error al eliminar el comunicado'
+            });
+        }
     };
 
     const openEdit = (comunicado: Comunicado) => {
