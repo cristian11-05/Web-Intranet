@@ -10,7 +10,7 @@ const api = axios.create({
     },
 });
 
-export const USE_MOCK = false; // Forzamos modo simulación para que el usuario pueda navegar sin BD
+export const USE_MOCK = true; // Forzamos modo simulación para que el usuario pueda navegar sin BD
 
 // Interceptor to add JWT token to requests
 api.interceptors.request.use(

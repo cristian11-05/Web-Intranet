@@ -36,9 +36,9 @@ export const authService = {
         const response = await api.post('/auth/login', { email, password });
         const data = response as unknown as LoginResponse;
 
-        if (data.access_token) {
+        if (data.access_token && data.user) {
             localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('user_role', data.user.rol);
+            localStorage.setItem('user_role', data.user.rol || 'trabajador');
             localStorage.setItem('user_data', JSON.stringify(data.user));
         }
 
